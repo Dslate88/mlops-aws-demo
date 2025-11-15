@@ -1,0 +1,14 @@
+[project]
+name = "mlops-aws-demo"
+version = "0.1.0"
+description = "ml/llm ops interactive demo"
+readme = "README.md"
+requires-python = ">=3.13"
+
+[dependency-groups]
+dev = [
+    {include-group = "backend"}
+]
+backend = [
+    "fastapi>=0.121.2",
+]

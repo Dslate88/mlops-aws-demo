@@ -9,3 +9,6 @@ lint:
 
 format:
 	ruff format
+
+test:
+	pytest

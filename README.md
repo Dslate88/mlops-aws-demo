@@ -18,6 +18,9 @@
 
 ## iteration approach/thoughts/braindump:
 - setup core backend/frontend on respective infra W/O caring about securing traffic until later
+- stage1: local working
+- stage2: minimal aws working
+- stage3: aws improvements (networking, bundling, etc)
 
 ## dev notes (aka document later)
 - pipx usage

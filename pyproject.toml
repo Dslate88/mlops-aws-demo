@@ -13,3 +13,6 @@ backend = [
     "fastapi>=0.121.2",
     "uvicorn>=0.38.0",
 ]
+frontend = [
+    "streamlit>=1.51.0",
+]

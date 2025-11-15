@@ -4,8 +4,8 @@ backend:
 frontend:
 	cd src/frontend && uv run streamlit run app.py
 
-make lint:
+lint:
 	ruff check .
 
-make format:
+format:
 	ruff format

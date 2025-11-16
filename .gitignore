@@ -1,1 +1,10 @@
+# general python
 __pycache__/
+
+## baml
+src/backend/baml_client/**
+
+## mlflow
+mlflow.db
+mlruns/
+mlartifacts/

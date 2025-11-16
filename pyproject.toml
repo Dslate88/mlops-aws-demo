@@ -12,7 +12,11 @@ dev = [
     {include-group = "test"}
 ]
 backend = [
+    "baml-py>=0.213.0",
     "fastapi>=0.121.2",
+    "mlflow>=3.6.0",
+    "python-dotenv>=1.2.1",
+    "scikit-learn>=1.7.2",
     "uvicorn>=0.38.0",
 ]
 frontend = [

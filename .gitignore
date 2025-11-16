@@ -1,1 +1,11 @@
+# general python
 __pycache__/
+**.egg-info
+
+## baml
+src/backend/baml_client/**
+
+## mlflow
+mlflow.db
+mlruns/
+mlartifacts/

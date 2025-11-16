@@ -11,7 +11,9 @@ function SelectTool(user_message: string) -> ModelRegistryAPI | NonApprovedReque
 
 // TODO: implement action list later...
 class ModelRegistryAPI {
-  intent "list_registered_models"
+  intent "model_registry" @description(#"
+    User is asking questions related to machine learning models in the registry.
+  "#)
 }
 
 class NonApprovedRequest {

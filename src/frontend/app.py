@@ -2,9 +2,9 @@ import requests
 
 import streamlit as st
 
-st.title("Simple chat")
+st.title("mlops-demo-chat")
 
-## TODO: make ui display history...
+## TODO: revert to only show most recent message display history...? test performance later
 ## TODO: create .env/config pattern
 BACKEND_URL = "http://localhost:8000/chat"
 
@@ -16,11 +16,17 @@ for message in st.session_state.messages:
         st.markdown(message["content"])
 
 # TODO: metadata show in UI...?
-if prompt := st.chat_input("Type something"):
-    payload = {
-        "prompt": prompt 
-    }
-    resp = requests.post(f"{BACKEND_URL}", json=payload)
+prompt = st.chat_input("Type something")
+
+if prompt:
     with st.chat_message("user"):
+        st.markdown(prompt)
+        st.session_state.messages.append({"role": "user", "content": prompt})
+
+    with st.chat_message("assistant"):
+        payload = {
+            "prompt": prompt 
+        }
+        resp = requests.post(f"{BACKEND_URL}", json=payload)
         st.markdown(resp.json())
-    st.session_state.messages.append({"role": "user", "content": prompt})
+        st.session_state.messages.append({"role": "assistant", "content": resp.json()})

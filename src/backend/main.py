@@ -23,13 +23,17 @@ class ChatRequest(BaseModel):
 
 # ########################################################
 # TODO: utility functions find home later
-def list_models():
-    models = client.search_registered_models()
-    return [model.name for model in models]
-
 def get_latest_version(model_name):
     versions = client.search_model_versions(f"name='{model_name}'")
     return max([int(x.version) for x in versions])
+
+def get_models():
+    models = {}
+    for rm in client.search_registered_models():
+        latest = get_latest_version(rm.name)
+        mv = client.get_model_version(rm.name, latest)
+        models[rm.name] = mv.tags.get("app_stage")
+    return models
 
 # TODO: metadata that dhows valid options per action to user??
 def set_model_stage(model_name, operation):
@@ -48,9 +52,13 @@ def set_model_stage(model_name, operation):
     else:
         return f"No action taken. `{model_name}` already set to `{target_stage}`."
 
-# ########################################################
+def render_markdown(models):
+    lines = ["**Models:**"]
+    for name, stage in models.items():
+        lines.append(f"- `{name}` (stage: `{stage}`)")
+    return "\n".join(lines)
 
-VALID_MODELS = list_models()
+# ########################################################
 
 @app.get("/")
 def home():
@@ -58,18 +66,19 @@ def home():
 
 @app.post("/chat")
 def chat(request: ChatRequest):
+    MODELS = get_models()
     resp = b.SelectTool(request.prompt)
+
     # TODO: will handle intent responses later...
     if isinstance(resp, ModelRegistryAPI):
-        return {"content": VALID_MODELS} 
+        return {"content": render_markdown(MODELS)}
 
     if isinstance(resp, ModelStageAPI):
-        # TODO: error handle if model_name does not exist, then inform user of valid models they can select
-        if resp.model_name in VALID_MODELS:
+        if resp.model_name in MODELS.keys():
             result = set_model_stage(resp.model_name, resp.operation)
             return {"content": result} 
         else:
-            return {"content": f"You requested an invalid model. Choose from\n{VALID_MODELS}"} 
+            return {"content": f"You requested an invalid model. Choose from\n{render_markdown(MODELS)}"} 
 
 
     # TODO: inject list of approved actions

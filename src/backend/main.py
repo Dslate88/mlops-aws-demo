@@ -29,7 +29,7 @@ def list_models():
 
 def get_latest_version(model_name):
     versions = client.search_model_versions(f"name='{model_name}'")
-    return max([x.version for x in versions])
+    return max([int(x.version) for x in versions])
 
 def set_model_stage(model_name, operation):
     version = get_latest_version(model_name)
@@ -43,9 +43,9 @@ def set_model_stage(model_name, operation):
             key="app_stage",
             value=target_stage
         )
-        return f"{model_name} stage sucessfully set to {target_stage}."
+        return f"model:{model_name} sucessfully set to {target_stage}."
     else:
-        return f"No action taken. {model_name} already set to {target_stage}."
+        return f"No action taken. model:{model_name} already set to {target_stage}."
 
 # ########################################################
 @app.get("/")

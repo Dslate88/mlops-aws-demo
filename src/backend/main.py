@@ -25,7 +25,7 @@ class ChatRequest(BaseModel):
 # TODO: utility functions find home later
 def list_models():
     models = client.search_registered_models()
-    return [model.name for model in models]
+    return ", ".join([model.name for model in models])
 
 def get_latest_version(model_name):
     versions = client.search_model_versions(f"name='{model_name}'")

@@ -21,7 +21,6 @@ prompt = st.chat_input("Type something")
 if prompt:
     with st.chat_message("user"):
         st.markdown(prompt)
-        # st.session_state.messages.append({"role": "user", "content": prompt})
 
     with st.chat_message("assistant"):
         payload = {
@@ -29,4 +28,3 @@ if prompt:
         }
         resp = requests.post(f"{BACKEND_URL}", json=payload).json()
         st.markdown(resp.get("content"))
-        # st.session_state.messages.append({"role": "assistant", "content": resp.json()})

@@ -31,15 +31,21 @@ def get_latest_version(model_name):
     versions = client.search_model_versions(f"name='{model_name}'")
     return max([x.version for x in versions])
 
-def stage_model(stage: ModelStageAPI):
-    tgt = "Production" if stage.operation == "elevate" else stage.operation
-    v_id = get_latest_version(stage.model_name)
-    client.set_model_version_tag(
-        name=stage.model_name,
-        version=v_id,
-        key="app_stage",
-        value=tgt
-    )
+def set_model_stage(model_name, operation):
+    version = get_latest_version(model_name)
+    target_stage = "Production" if operation == "elevate" else "Archived"
+    current_stage = client.get_model_version(model_name, version).tags.get("app_stage")
+
+    if current_stage != target_stage:
+        client.set_model_version_tag(
+            name=model_name,
+            version=version,
+            key="app_stage",
+            value=target_stage
+        )
+        return f"{model_name} stage sucessfully set to {target_stage}."
+    else:
+        return f"No action taken. {model_name} already set to {target_stage}."
 
 # ########################################################
 @app.get("/")
@@ -52,14 +58,16 @@ def chat(request: ChatRequest):
     # TODO: will handle intent responses later...
     if isinstance(resp, ModelRegistryAPI):
         result = list_models()
-        return {"models": result} 
+        return {"content": result} 
 
     if isinstance(resp, ModelStageAPI):
         # TODO: error handle if model_name does not exist, then inform user of valid models they can select
-        result = stage_model(resp)
-        return {"resp": resp} 
+        result = set_model_stage(resp.model_name, resp.operation)
+        # return {"resp": resp} 
+        return {"content": result} 
+
 
     # TODO: inject list of approved actions
     elif isinstance(resp, NonApprovedRequest):
         result = "This is not an approved request. You may ask about <insert_list> later.."
-        return {"Denied": result} 
+        return {"content": result} 

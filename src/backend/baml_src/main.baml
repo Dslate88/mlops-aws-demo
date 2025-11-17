@@ -1,4 +1,4 @@
-function SelectTool(user_message: string) -> ModelRegistryAPI | NonApprovedRequest {
+function SelectTool(user_message: string) -> ModelRegistryAPI | NonApprovedRequest | ModelStageAPI {
   client "openai/gpt-5-mini"
   prompt #"
     Given a message, extract info.
@@ -14,6 +14,14 @@ class ModelRegistryAPI {
   intent "model_registry" @description(#"
     User is asking questions related to machine learning models in the registry.
   "#)
+}
+
+class ModelStageAPI {
+  intent "model_stage_changes" @description(#"
+    User either wants to elevate or archive a machine learning model.
+  "#)
+  operation "elevate" | "archive"
+  model_name string
 }
 
 class NonApprovedRequest {
@@ -32,12 +40,20 @@ test ModelList {
   }
 }
 
+test ModelStage {
+  functions [SelectTool]
+  args {
+    user_message #"
+      take model_a off production
+    "#
+  }
+}
+
 test GeneralChat {
   functions [SelectTool]
   args {
     user_message #"
       Hi
-
     "#
   }
 }

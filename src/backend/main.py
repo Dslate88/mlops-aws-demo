@@ -25,12 +25,13 @@ class ChatRequest(BaseModel):
 # TODO: utility functions find home later
 def list_models():
     models = client.search_registered_models()
-    return ", ".join([model.name for model in models])
+    return [model.name for model in models]
 
 def get_latest_version(model_name):
     versions = client.search_model_versions(f"name='{model_name}'")
     return max([int(x.version) for x in versions])
 
+# TODO: metadata that dhows valid options per action to user??
 def set_model_stage(model_name, operation):
     version = get_latest_version(model_name)
     target_stage = "Production" if operation == "elevate" else "Archived"
@@ -43,11 +44,14 @@ def set_model_stage(model_name, operation):
             key="app_stage",
             value=target_stage
         )
-        return f"model:{model_name} sucessfully set to {target_stage}."
+        return f"`{model_name}` sucessfully set to `{target_stage}`."
     else:
-        return f"No action taken. model:{model_name} already set to {target_stage}."
+        return f"No action taken. `{model_name}` already set to `{target_stage}`."
 
 # ########################################################
+
+VALID_MODELS = list_models()
+
 @app.get("/")
 def home():
     return {"message": "Hello!"}
@@ -57,14 +61,15 @@ def chat(request: ChatRequest):
     resp = b.SelectTool(request.prompt)
     # TODO: will handle intent responses later...
     if isinstance(resp, ModelRegistryAPI):
-        result = list_models()
-        return {"content": result} 
+        return {"content": VALID_MODELS} 
 
     if isinstance(resp, ModelStageAPI):
         # TODO: error handle if model_name does not exist, then inform user of valid models they can select
-        result = set_model_stage(resp.model_name, resp.operation)
-        # return {"resp": resp} 
-        return {"content": result} 
+        if resp.model_name in VALID_MODELS:
+            result = set_model_stage(resp.model_name, resp.operation)
+            return {"content": result} 
+        else:
+            return {"content": f"You requested an invalid model. Choose from\n{VALID_MODELS}"} 
 
 
     # TODO: inject list of approved actions

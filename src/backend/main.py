@@ -7,6 +7,8 @@ from dotenv import load_dotenv
 from .baml_client import b
 from .baml_client.types import ModelRegistryAPI, ModelStageAPI, NonApprovedRequest 
 
+## TODO idea:
+# - rollback logic?
 
 load_dotenv()
 

@@ -1,4 +1,4 @@
-function SelectTool(user_message: string) -> ModelRegistryAPI | NonApprovedRequest | ModelStageAPI {
+function SelectTool(user_message: string) -> ModelRegistryAPI | NonApprovedRequest | ModelStageAPI | ModelInferenceAPI {
   client "openai/gpt-5-mini"
   prompt #"
     Given a message, extract info.
@@ -24,6 +24,13 @@ class ModelStageAPI {
   model_name string
 }
 
+class ModelInferenceAPI {
+  intent "model_inference" @description(#"
+    User wants to test/predict/score a model to see its result.
+  "#)
+  model_name string?
+}
+
 class NonApprovedRequest {
   intent "other" @description(#"
     Select this intent when none of the other options are appropriate.
@@ -31,6 +38,15 @@ class NonApprovedRequest {
 }
 
 // TODO: add expected intents to tests...
+test ModelInference {
+  functions [SelectTool]
+  args {
+    user_message #"
+      I want to test a model
+    "#
+  }
+}
+
 test ModelList {
   functions [SelectTool]
   args {

@@ -15,6 +15,7 @@ from .baml_client.types import (
     ModelInput,
 )
 from .baml_client.types import ModelInput
+from ..backend.models.titanic import TitanicModelService
 
 
 ## TODO idea:
@@ -104,58 +105,6 @@ def predict(sex, pclass, embarked, alone):
     return {"message": pred}
 
 
-MAPPINGS = {
-    "SexTypes": {
-        "MALE": "male",
-        "FEMALE": "female",
-    },
-    "ClassTypes": {
-        "FIRST": 1,
-        "SECOND": 2,
-        "THIRD": 3,
-    },
-    "EmbarkTypes": {
-        "ENGLAND": "S",
-        "FRANCE": "C",
-        "IRELAND": "Q",
-    },
-    "AloneTypes": {
-        "TRUE": 1,
-        "FALSE": 0,
-    },
-}
-
-
-# TODO: organize this
-def missing_response(names):
-    mapping = {
-        # 0: "valid",
-        1: "{} value is missing",
-        2: "{} and {} are missing values",
-        3: "{}, {} and {} are missing values",
-        4: "{}, {}, {} and {} are missing values",
-    }
-    n = len(names)
-    key = n if n < 4 else 4
-    args = names if n < 5 else [names[0], names[1], n - 2]
-    return mapping.get(key).format(*args)
-
-
-# TODO: organize this
-def transform_values(mi: ModelInput):
-    sex_val = MAPPINGS["SexTypes"][mi.sex.name]
-    pclass_val = MAPPINGS["ClassTypes"][mi.pclass.name]
-    embarked_val = MAPPINGS["EmbarkTypes"][mi.embarked.name]
-    alone_val = MAPPINGS["AloneTypes"][mi.alone.name]
-
-    return (sex_val, pclass_val, embarked_val, alone_val)
-
-
-# TODO: generalize this later...
-def valid_values(MAPPINGS):
-    return {k: list(v.keys()) for k, v in MAPPINGS.items()}
-
-
 @app.post("/chat")
 def chat(request: ChatRequest):
     MODELS = get_models()
@@ -175,18 +124,30 @@ def chat(request: ChatRequest):
             }
 
     if isinstance(resp, ModelInferenceAPI):
-        # TODO: validate model_name is valid
+        svc = TitanicModelService()
+        mi: ModelInput = b.ValidateInput(request.prompt)
 
-        # Confirm I have all 4 fields
-        val = b.ValidateInput(request.prompt)
+        if mi.missing_details:
+            incomplete_response = svc.missing_response(mi.missing_details)
+            return {
+                "content": incomplete_response,
+                "metadata": {
+                    "valid_values": svc.valid_values(),
+                },
+            }
 
-        if val.missing_details:
-            incomplete_response = missing_response(val.missing_details)
-            return {"content": incomplete_response, "metadata": valid_values(MAPPINGS)}
-        else:
-            t_sex, t_pclass, t_embarked, t_alone = transform_values(val)
-            pred = predict(t_sex, t_pclass, t_embarked, t_alone)
-            return {"content": pred}
+        features = svc.transform(mi)
+        raw_pred = svc.predict(features)
+        content = svc.format_response(raw_pred)
+
+        return {
+            "content": content,
+            "metadata": {
+                "raw_prediction": raw_pred,
+                "model_name": svc.model_name,
+                "valid_values": svc.valid_values(),
+            },
+        }
 
     # TODO: inject list of approved actions
     if isinstance(resp, NonApprovedRequest):
@@ -194,3 +155,5 @@ def chat(request: ChatRequest):
             "This is not an approved request. You may ask about <insert_list> later.."
         )
         return {"content": result}
+
+    # TODO: add help intent handling?

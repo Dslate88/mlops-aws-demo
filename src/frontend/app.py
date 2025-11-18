@@ -17,6 +17,7 @@ for message in st.session_state.messages:
 
 prompt = st.chat_input("Type something")
 
+# TODO: display proba instead...
 if prompt:
     with st.chat_message("user"):
         st.markdown(prompt)
@@ -29,7 +30,6 @@ if prompt:
         st.markdown(resp.get("content"))
 
         if resp.get("metadata"):
-            st.markdown(resp.get("content"))
-            with st.expander("Show valid values", expanded=False):
+            with st.expander("Show metadata", expanded=False):
                 st.json(resp.get("metadata"))
             st.session_state.messages.append({"role": "assistant", "content": content})

@@ -84,27 +84,6 @@ def home():
     return {"message": "Hello!"}
 
 
-# TODO: setup multi-model prediction pattern
-def predict(sex, pclass, embarked, alone):
-    MODEL_NAME = "titanic"
-
-    onnx_model = mlflow.onnx.load_model(f"models:/{MODEL_NAME}/latest")
-    sess = rt.InferenceSession(onnx_model.SerializeToString())
-
-    feed = {
-        "sex": np.array([[sex]], dtype=object),
-        "pclass": np.array([[pclass]], dtype=np.int64),
-        "embarked": np.array([[embarked]], dtype=object),
-        "alone": np.array([[alone]], dtype=np.int64),
-    }
-    output = sess.run(None, feed)
-
-    pred = int(output[0].item())
-    pred
-
-    return {"message": pred}
-
-
 @app.post("/chat")
 def chat(request: ChatRequest):
     MODELS = get_models()
@@ -137,7 +116,9 @@ def chat(request: ChatRequest):
             }
 
         features = svc.transform(mi)
-        raw_pred = svc.predict(features)
+        raw_pred = svc.predict(
+            features
+        )  # TODO: change to preds with array of pred/proba?
         content = svc.format_response(raw_pred)
 
         return {

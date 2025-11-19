@@ -3,9 +3,8 @@ from abc import ABC, abstractmethod
 import onnxruntime as rt
 import mlflow
 
-from ..baml_client.types import ModelInput
 
-
+# TODO: check session thread once deployed..
 class BaseModelService(ABC):
     model_name: str
 
@@ -42,7 +41,7 @@ class BaseModelService(ABC):
         return mapping.get(key).format(*args)
 
     @abstractmethod
-    def transform(self, mi: ModelInput):
+    def transform(self):
         pass
 
     # TODO: mv definition from titanic to this..

@@ -12,10 +12,10 @@ from .baml_client.types import (
     ModelStageAPI,
     NonApprovedRequest,
     ModelInferenceAPI,
-    ModelInput,
+    TitanicInput
 )
-from .baml_client.types import ModelInput
 from ..backend.models.titanic import TitanicModelService
+# from ..backend.models.insurance import InsuranceModelService
 
 
 ## TODO idea:
@@ -39,7 +39,7 @@ class ChatRequest(BaseModel):
 
 
 # ########################################################
-# TODO: utility functions find home later
+# TODO: maybe separate elevate/archive methods?
 def get_latest_version(model_name):
     versions = client.search_model_versions(f"name='{model_name}'")
     return max([int(x.version) for x in versions])
@@ -55,6 +55,7 @@ def get_models():
 
 
 # TODO: metadata that dhows valid options per action to user??
+# TODO: ensure only one model is in production at a time.
 def set_model_stage(model_name, operation):
     version = get_latest_version(model_name)
     target_stage = "Production" if operation == "elevate" else "Archived"
@@ -104,7 +105,7 @@ def chat(request: ChatRequest):
 
     if isinstance(resp, ModelInferenceAPI):
         svc = TitanicModelService()
-        mi: ModelInput = b.ValidateInput(request.prompt)
+        mi = b.TitanicValidateInput(request.prompt)  # TODO: change to val instead of mi
 
         if mi.missing_details:
             incomplete_response = svc.missing_response(mi.missing_details)

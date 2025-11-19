@@ -1,7 +1,7 @@
 import numpy as np
 
 from .base import BaseModelService
-from ..baml_client.types import ModelInput
+from ..baml_client.types import TitanicInput
 
 
 class TitanicModelService(BaseModelService):
@@ -30,11 +30,11 @@ class TitanicModelService(BaseModelService):
             },
         }
 
-    def transform(self, mi: ModelInput):
-        sex_val = self.map["SexTypes"][mi.sex.name]
-        pclass_val = self.map["ClassTypes"][mi.pclass.name]
-        embarked_val = self.map["EmbarkTypes"][mi.embarked.name]
-        alone_val = self.map["AloneTypes"][mi.alone.name]
+    def transform(self, inp: TitanicInput):
+        sex_val = self.map["SexTypes"][inp.sex.name]
+        pclass_val = self.map["ClassTypes"][inp.pclass.name]
+        embarked_val = self.map["EmbarkTypes"][inp.embarked.name]
+        alone_val = self.map["AloneTypes"][inp.alone.name]
 
         features = {
             "sex": sex_val,

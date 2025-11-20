@@ -57,4 +57,9 @@ if prompt:
                 for field, values in valid_values.items():
                     st.write(f"**{field}**: {', '.join(values)}")
 
+        if kind == "inference":
+            raw = resp["metadata"].get("raw_prediction")
+            model_name = resp["metadata"].get("model_name")
+            st.caption(f"{model_name} raw prediction: `{raw}`")
+
         st.session_state.messages.append({"role": "assistant", "content": content})

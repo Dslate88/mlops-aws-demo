@@ -43,7 +43,8 @@ class ChatResponse(BaseModel):
     kind: Literal[
         "list_models",
         "elevate",
-        "missing_inputs"
+        "missing_inputs",
+        "inference"
     ]
     error: bool = False
     metadata: Optional[dict] = None
@@ -129,14 +130,14 @@ def chat(request: ChatRequest):
         )  # TODO: change to preds with array of pred/proba?
         content = svc.format_response(raw_pred)
 
-        return {
-            "content": content,
-            "metadata": {
+        return ChatResponse(
+            content=content,
+            kind="inference",
+            metadata={
                 "raw_prediction": raw_pred,
                 "model_name": svc.model_name,
-                "valid_values": svc.valid_values(),
             },
-        }
+        )
 
     # TODO: inject list of approved actions
     # Guardrail

@@ -5,6 +5,7 @@ from mlflow.tracking import MlflowClient
 from dotenv import load_dotenv
 import onnxruntime as rt
 import numpy as np
+from typing import Optional, Literal
 
 from .baml_client import b
 from .baml_client.types import (
@@ -36,7 +37,16 @@ app = FastAPI(title="ML_LLM Ops Demo - Backend APIs", version="0.0.1")
 class ChatRequest(BaseModel):
     prompt: str
 
+class ChatResponse(BaseModel):
+    content: str
+    kind: Literal[
+        "list_models",
+    ]
+    error: bool = False
+    metadata: Optional[dict] = None
 
+
+# TODO: move me
 def render_markdown(models):
     lines = ["**Models:**"]
     for name, stage in models.items():
@@ -60,17 +70,27 @@ def chat(request: ChatRequest):
 
     # List Registry Models
     if isinstance(resp, ModelRegistryAPI):
-        return {"content": render_markdown(MODELS)}
+        return ChatResponse(
+            content=render_markdown(MODELS),
+            kind="list_models",
+        )
 
     # Elevate/Archive Models
     if isinstance(resp, ModelStageAPI):
         if resp.model_name in mr:
             result = mr.set_model_stage(resp.model_name, resp.operation)
-            return {"content": result}
+            return ChatResponse(
+                content=result,
+                kind="elevate",
+                intent="model_stage_changes",
+            )
         else:
-            return {
-                "content": f"You requested an invalid model. Choose from\n{render_markdown(MODELS)}"
-            }
+            return ChatResponse(
+                content=f"You requested an invalid model. Choose from\n{render_markdown(MODELS)}",
+                kind="elevate",
+                intent="model_stage_changes",
+                error=True
+            )
 
     # Predict f(x)
     if isinstance(resp, ModelInferenceAPI):

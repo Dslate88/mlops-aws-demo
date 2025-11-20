@@ -12,24 +12,30 @@ BACKEND_URL = "http://localhost:8000/chat"
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+if "help_prompt" not in st.session_state:
+    st.session_state.help_prompt = None
+
 col1, col2, col3, col4 = st.columns(4)
-help_prompt = None
 if col1.button("List models"):
-    help_prompt = "What models are available?"
+    st.session_state.help_prompt = "What models are available?"
 if col2.button("Elevate model"):
-    help_prompt = "Elevate titanic to production."
+    st.session_state.help_prompt = "Elevate titanic to production."
+if col3.button("Test Model"):
+    st.session_state.help_prompt = "Test model"
 
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-prompt = help_prompt or st.chat_input("Type something")
+user_input = st.chat_input("Type something")
+prompt = st.session_state.help_prompt or user_input
+st.session_state.help_prompt = None
 
 # TODO: display proba instead...
 if prompt:
     with st.chat_message("user"):
         st.markdown(prompt)
-        st.session_state.messages.append({"role": "user", "content": prompt})
+    st.session_state.messages.append({"role": "user", "content": prompt})
 
     with st.chat_message("assistant"):
         payload = {"prompt": prompt}

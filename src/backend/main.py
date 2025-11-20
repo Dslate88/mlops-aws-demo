@@ -141,9 +141,8 @@ def chat(request: ChatRequest):
     # TODO: inject list of approved actions
     # Guardrail
     if isinstance(resp, NonApprovedRequest):
-        result = (
-            "This is not an approved request. You may ask about <insert_list> later.."
+        return ChatResponse(
+            content="This is not an approved request. Try again.",
+            kind="error",
+            error=True
         )
-        return {"content": result}
-
-    # TODO: add help intent handling?

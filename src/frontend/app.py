@@ -16,6 +16,8 @@ col1, col2, col3, col4 = st.columns(4)
 help_prompt = None
 if col1.button("List models"):
     help_prompt = "What models are available?"
+if col2.button("Elevate model"):
+    help_prompt = "Elevate titanic to production."
 
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
@@ -44,6 +46,11 @@ if prompt:
 
         if kind == "list_models":
             st.caption("Tip: try `Elevate <model_name> to production` next.")
+
+        if kind == "elevate" and not is_error:
+            # TODO: need to handle this flow in the UI..its missing a step
+            st.caption("Tip: You can now test model by saying `I want to test the model`.")
+
 
         if resp.get("metadata"):
             with st.expander("Show metadata", expanded=False):

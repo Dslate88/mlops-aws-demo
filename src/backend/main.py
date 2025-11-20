@@ -37,10 +37,12 @@ app = FastAPI(title="ML_LLM Ops Demo - Backend APIs", version="0.0.1")
 class ChatRequest(BaseModel):
     prompt: str
 
+# TODO: keep elevate as only action, remove ability to archive in baml layer...
 class ChatResponse(BaseModel):
     content: str
     kind: Literal[
         "list_models",
+        "elevate"
     ]
     error: bool = False
     metadata: Optional[dict] = None

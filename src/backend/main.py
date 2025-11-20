@@ -42,7 +42,8 @@ class ChatResponse(BaseModel):
     content: str
     kind: Literal[
         "list_models",
-        "elevate"
+        "elevate",
+        "missing_inputs"
     ]
     error: bool = False
     metadata: Optional[dict] = None
@@ -113,12 +114,13 @@ def chat(request: ChatRequest):
         # Handle incomplete features (if any)
         if val.missing_details:
             incomplete_response = svc.missing_response(val.missing_details)
-            return {
-                "content": incomplete_response,
-                "metadata": {
+            return ChatResponse(
+                content=incomplete_response,
+                kind="missing_inputs",
+                metadata= {
                     "valid_values": svc.valid_values(),
                 },
-            }
+            )
 
         # Run Inference
         features = svc.transform(val)

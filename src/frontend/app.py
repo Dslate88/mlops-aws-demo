@@ -51,9 +51,10 @@ if prompt:
             # TODO: need to handle this flow in the UI..its missing a step
             st.caption("Tip: You can now test model by saying `I want to test the model`.")
 
-
-        if resp.get("metadata"):
-            with st.expander("Show metadata", expanded=False):
-                st.json(resp.get("metadata"))
+        if kind == "missing_inputs":
+            valid_values = resp["metadata"].get("valid_values", {})
+            with st.expander("Valid values", expanded=False):
+                for field, values in valid_values.items():
+                    st.write(f"**{field}**: {', '.join(values)}")
 
         st.session_state.messages.append({"role": "assistant", "content": content})

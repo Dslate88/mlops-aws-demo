@@ -1,0 +1,34 @@
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: mlops-backend
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+    ports:
+      - "8001:8000"
+    depends_on:
+      - mlflow
+
+  mlflow:
+    # https://github.com/mlflow/mlflow/issues/16659
+    # image: ghcr.io/mlflow/mlflow:latest
+    image: ghcr.io/mlflow/mlflow:v3.6.0
+    container_name: mlops-mlflow
+    command: >
+      mlflow server
+      --backend-store-uri sqlite:///mlflow.db
+      --default-artifact-root /mlruns
+      --host 0.0.0.0
+      --port 5000
+      --allowed-hosts "mlflow,localhost,127.0.0.1"
+    volumes:
+      - ./mlruns:/mlruns
+      - ./mlflow.db:/mlflow.db
+    ports:
+      - "5001:5000"
+
+# NOTE: left off troubleshooting dns rebinding protection error on docker compose up

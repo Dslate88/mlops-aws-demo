@@ -1,3 +1,4 @@
+import os
 from pydantic import BaseModel
 from fastapi import FastAPI
 import mlflow
@@ -24,7 +25,7 @@ from .models.factory import ModelFactory
 
 load_dotenv()
 
-MLFLOW_TRACKING_URI = "http://127.0.0.1:5000/"
+MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "http://127.0.0.1:5000/")
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 mlflow.set_experiment("Default")
 

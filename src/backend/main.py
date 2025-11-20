@@ -5,6 +5,7 @@ from mlflow.tracking import MlflowClient
 from dotenv import load_dotenv
 import onnxruntime as rt
 import numpy as np
+from typing import Optional, Literal
 
 from .baml_client import b
 from .baml_client.types import (
@@ -36,7 +37,21 @@ app = FastAPI(title="ML_LLM Ops Demo - Backend APIs", version="0.0.1")
 class ChatRequest(BaseModel):
     prompt: str
 
+# TODO: keep elevate as only action, remove ability to archive in baml layer...
+class ChatResponse(BaseModel):
+    content: str
+    kind: Literal[
+        "list_models",
+        "elevate",
+        "missing_inputs",
+        "inference",
+        "error"
+    ]
+    error: bool = False
+    metadata: Optional[dict] = None
 
+
+# TODO: move me
 def render_markdown(models):
     lines = ["**Models:**"]
     for name, stage in models.items():
@@ -60,27 +75,35 @@ def chat(request: ChatRequest):
 
     # List Registry Models
     if isinstance(resp, ModelRegistryAPI):
-        return {"content": render_markdown(MODELS)}
+        return ChatResponse(
+            content=render_markdown(MODELS),
+            kind="list_models",
+        )
 
     # Elevate/Archive Models
     if isinstance(resp, ModelStageAPI):
         if resp.model_name in mr:
             result = mr.set_model_stage(resp.model_name, resp.operation)
-            return {"content": result}
+            return ChatResponse(
+                content=result,
+                kind="elevate",
+            )
         else:
-            return {
-                "content": f"You requested an invalid model. Choose from\n{render_markdown(MODELS)}"
-            }
+            return ChatResponse(
+                content=f"You requested an invalid model. Choose from\n{render_markdown(MODELS)}",
+                kind="elevate",
+                error=True
+            )
 
     # Predict f(x)
     if isinstance(resp, ModelInferenceAPI):
         # Confirm a model is in Production
         if not active_model:
-            return {
-                "content": (
-                    "No model is currently in Production. Ask me to elevate a model first."
-                )
-            }
+            return ChatResponse(
+                content="No model is currently in Production. Ask me to elevate a model first.",
+                kind="error",
+                error=True
+            )
 
         # Factory Pattern
         svc, validate_fn = ModelFactory.create(active_model)
@@ -91,12 +114,13 @@ def chat(request: ChatRequest):
         # Handle incomplete features (if any)
         if val.missing_details:
             incomplete_response = svc.missing_response(val.missing_details)
-            return {
-                "content": incomplete_response,
-                "metadata": {
+            return ChatResponse(
+                content=incomplete_response,
+                kind="missing_inputs",
+                metadata= {
                     "valid_values": svc.valid_values(),
                 },
-            }
+            )
 
         # Run Inference
         features = svc.transform(val)
@@ -105,21 +129,20 @@ def chat(request: ChatRequest):
         )  # TODO: change to preds with array of pred/proba?
         content = svc.format_response(raw_pred)
 
-        return {
-            "content": content,
-            "metadata": {
+        return ChatResponse(
+            content=content,
+            kind="inference",
+            metadata={
                 "raw_prediction": raw_pred,
                 "model_name": svc.model_name,
-                "valid_values": svc.valid_values(),
             },
-        }
+        )
 
     # TODO: inject list of approved actions
     # Guardrail
     if isinstance(resp, NonApprovedRequest):
-        result = (
-            "This is not an approved request. You may ask about <insert_list> later.."
+        return ChatResponse(
+            content="This is not an approved request. Try again.",
+            kind="error",
+            error=True
         )
-        return {"content": result}
-
-    # TODO: add help intent handling?

@@ -32,4 +32,5 @@ if prompt:
         if resp.get("metadata"):
             with st.expander("Show metadata", expanded=False):
                 st.json(resp.get("metadata"))
-            st.session_state.messages.append({"role": "assistant", "content": content})
+
+        st.session_state.messages.append({"role": "assistant", "content": content})

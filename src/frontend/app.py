@@ -35,7 +35,12 @@ if prompt:
 
         content = resp.get("content")
         kind = resp.get("kind")
-        st.markdown(resp.get("content"))
+        is_error = resp.get("error")
+
+        if is_error:
+            st.error(resp.get("content"))
+        else:
+            st.markdown(resp.get("content"))
 
         if kind == "list_models":
             st.caption("Tip: try `Elevate <model_name> to production` next.")

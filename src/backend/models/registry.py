@@ -43,14 +43,14 @@ class ModelRegistry:
 
 
     def _archive_models(self, tgt_model):
-        for model, stage in self._list_models:
+        for model, stage in self._list_models().items():
             if stage == "Production" and model != tgt_model:
-                client.set_model_version_tag(
+                self.client.set_model_version_tag(
                     name=model, version=self._latest_version(model), key="app_stage", value="Archived"
                 )
 
     def get_production_model(self):
-        for name, stage in self._list_models:
+        for name, stage in self._list_models().items():
             if stage == "Production":
                 return name
         return None
@@ -60,7 +60,7 @@ class ModelRegistry:
         current_stage = self._get_stage(model_name)
 
         if current_stage == tgt_stage:
-            return f"No action taken. `{model_name}` already set to `{model_name}`."
+            return f"No action taken. `{model_name}` already set to `{tgt_stage}`."
         else:
             self._set_stage(model_name, tgt_stage)
             self._archive_models(model_name)
@@ -69,15 +69,16 @@ class ModelRegistry:
 if __name__ == "__main__":
     client = MlflowClient()
     mr = ModelRegistry(client)
-    # x = mr.set_model_stage("titanic", "elevate")
-    for model in mr._list_models():
-        print(model)
+    # for model in mr._list_models():
+    #     print(model)
 
+    x = mr.set_model_stage("titanic", "elevate")
+    print(x)
+    x = mr.set_model_stage("insurance_premium", "elevate")
     # x = mr.set_model_stage("titanic", "archive")
-    # x = mr.set_model_stage("insurance_premium", "elevate")
     # x = mr.set_model_stage("insurance_premium", "archive")
     print(x)
-    # pm = mr.get_production_model()
-    # print(pm)
+    pm = mr.get_production_model()
+    print(f"active_model: {pm}")
 
 

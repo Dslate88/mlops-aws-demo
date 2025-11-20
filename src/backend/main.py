@@ -1,4 +1,3 @@
-from backend.models import MODEL_SERVICES
 from pydantic import BaseModel
 from fastapi import FastAPI
 import mlflow
@@ -13,12 +12,9 @@ from .baml_client.types import (
     ModelStageAPI,
     NonApprovedRequest,
     ModelInferenceAPI,
-    TitanicInput
 )
-from ..backend.models.titanic import TitanicModelService
 from .models.registry import ModelRegistry
-# from ..backend.models.insurance import InsuranceModelService
-
+from .models.factory import ModelFactory
 
 ## TODO idea:
 # - rollback logic?
@@ -88,10 +84,8 @@ def chat(request: ChatRequest):
                 )
             }
 
-        # Setup Service/Adapter
-        svc_entry = MODEL_SERVICES[active_model]
-        svc = svc_entry["service_cls"]()
-        validate_fn = svc_entry["validate_fn"]
+        # Factory Pattern
+        svc, validate_fn = ModelFactory.create(active_model)
         
         # Extract features from user input
         val = validate_fn(request.prompt)

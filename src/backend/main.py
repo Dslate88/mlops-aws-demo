@@ -44,7 +44,8 @@ class ChatResponse(BaseModel):
         "list_models",
         "elevate",
         "missing_inputs",
-        "inference"
+        "inference",
+        "error"
     ]
     error: bool = False
     metadata: Optional[dict] = None
@@ -86,13 +87,11 @@ def chat(request: ChatRequest):
             return ChatResponse(
                 content=result,
                 kind="elevate",
-                intent="model_stage_changes",
             )
         else:
             return ChatResponse(
                 content=f"You requested an invalid model. Choose from\n{render_markdown(MODELS)}",
                 kind="elevate",
-                intent="model_stage_changes",
                 error=True
             )
 
@@ -100,11 +99,11 @@ def chat(request: ChatRequest):
     if isinstance(resp, ModelInferenceAPI):
         # Confirm a model is in Production
         if not active_model:
-            return {
-                "content": (
-                    "No model is currently in Production. Ask me to elevate a model first."
-                )
-            }
+            return ChatResponse(
+                content="No model is currently in Production. Ask me to elevate a model first.",
+                kind="error",
+                error=True
+            )
 
         # Factory Pattern
         svc, validate_fn = ModelFactory.create(active_model)

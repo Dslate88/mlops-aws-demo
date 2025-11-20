@@ -37,8 +37,6 @@ class ChatRequest(BaseModel):
     prompt: str
 
 
-
-
 def render_markdown(models):
     lines = ["**Models:**"]
     for name, stage in models.items():
@@ -86,7 +84,7 @@ def chat(request: ChatRequest):
 
         # Factory Pattern
         svc, validate_fn = ModelFactory.create(active_model)
-        
+
         # Extract features from user input
         val = validate_fn(request.prompt)
 

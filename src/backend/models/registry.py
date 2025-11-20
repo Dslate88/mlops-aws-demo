@@ -14,11 +14,10 @@ class ModelRegistry:
 
     def __contains__(self, item):
         return item in self.list_models()
-        
+
     def _latest_version(self, model_name):
         versions = self.client.search_model_versions(f"name='{model_name}'")
         return max([int(x.version) for x in versions])
-
 
     def _get_stage(self, model_name):
         version = self._latest_version(model_name)
@@ -34,12 +33,14 @@ class ModelRegistry:
             value=stage,
         )
 
-
     def _archive_models(self, tgt_model):
         for model, stage in self.list_models().items():
             if stage == "Production" and model != tgt_model:
                 self.client.set_model_version_tag(
-                    name=model, version=self._latest_version(model), key="app_stage", value="Archived"
+                    name=model,
+                    version=self._latest_version(model),
+                    key="app_stage",
+                    value="Archived",
                 )
 
     def list_models(self):

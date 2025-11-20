@@ -19,4 +19,3 @@ class ModelFactory:
     def create(cls, model_name):
         entry = cls.registry[model_name]
         return entry["service_cls"](), entry["validate_fn"]
-

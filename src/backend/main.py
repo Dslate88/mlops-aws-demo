@@ -1,3 +1,4 @@
+from backend.models import MODEL_SERVICES
 from pydantic import BaseModel
 from fastapi import FastAPI
 import mlflow
@@ -60,6 +61,7 @@ def home():
 @app.post("/chat")
 def chat(request: ChatRequest):
     MODELS = mr.list_models()
+    active_model = mr.get_production_model()
     resp = b.SelectTool(request.prompt)
 
     # List Registry Models
@@ -78,11 +80,25 @@ def chat(request: ChatRequest):
 
     # Predict f(x)
     if isinstance(resp, ModelInferenceAPI):
-        svc = TitanicModelService()
-        mi = b.TitanicValidateInput(request.prompt)  # TODO: change to val instead of mi
+        # Confirm a model is in Production
+        if not active_model:
+            return {
+                "content": (
+                    "No model is currently in Production. Ask me to elevate a model first."
+                )
+            }
 
-        if mi.missing_details:
-            incomplete_response = svc.missing_response(mi.missing_details)
+        # Setup Service/Adapter
+        svc_entry = MODEL_SERVICES[active_model]
+        svc = svc_entry["service_cls"]()
+        validate_fn = svc_entry["validate_fn"]
+        
+        # Extract features from user input
+        val = validate_fn(request.prompt)
+
+        # Handle incomplete features (if any)
+        if val.missing_details:
+            incomplete_response = svc.missing_response(val.missing_details)
             return {
                 "content": incomplete_response,
                 "metadata": {
@@ -90,7 +106,8 @@ def chat(request: ChatRequest):
                 },
             }
 
-        features = svc.transform(mi)
+        # Run Inference
+        features = svc.transform(val)
         raw_pred = svc.predict(
             features
         )  # TODO: change to preds with array of pred/proba?

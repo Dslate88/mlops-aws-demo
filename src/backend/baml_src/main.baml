@@ -28,7 +28,6 @@ class ModelInferenceAPI {
   intent "model_inference" @description(#"
     User wants to test/predict/score a model to see its result.
   "#)
-  model_name string?
 }
 
 class NonApprovedRequest {

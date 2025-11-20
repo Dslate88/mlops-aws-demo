@@ -1,7 +1,21 @@
 function SelectTool(user_message: string) -> ModelRegistryAPI | NonApprovedRequest | ModelStageAPI | ModelInferenceAPI {
   client "openai/gpt-5-mini"
   prompt #"
-    Given a message, extract info.
+    You are a router. Decide which intent fits best and populate the fields.
+
+    Examples:
+    - Use ModelRegistryAPI for questions like:
+      - "What models are available?"
+      - "Which models do I have?"
+    - Use ModelStageAPI for model elevation/archival like:
+      - "Elevate titanic to production"
+      - "Take titanic off production"
+      - "Archive titanic"
+    - Use ModelInferenceAPI when the user wants to test/run/predict with the model:
+      - "I want to test the model in production"
+      - "Run a prediction with the production model"
+    - Use NonApprovedRequest for anything else.
+
     {{ ctx.output_format }}
 
     {{ _.role('user') }}

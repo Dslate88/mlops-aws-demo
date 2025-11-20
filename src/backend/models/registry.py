@@ -1,9 +1,9 @@
-import mlflow
-from mlflow.tracking import MlflowClient
-
-MLFLOW_TRACKING_URI="http://127.0.0.1:5000/"
-mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
-mlflow.set_experiment("Default")
+# import mlflow
+# from mlflow.tracking import MlflowClient
+#
+# MLFLOW_TRACKING_URI="http://127.0.0.1:5000/"
+# mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
+# mlflow.set_experiment("Default")
 
 # client = MlflowClient()
 
@@ -56,29 +56,18 @@ class ModelRegistry:
         return None
 
     def set_model_stage(self, model_name, operation):
+        if model_name not in self:
+            return f"No action taken. `{model_name}` is not a valid model."
+
         tgt_stage = "Production" if operation == "elevate" else "Archived"
         current_stage = self._get_stage(model_name)
 
         if current_stage == tgt_stage:
             return f"No action taken. `{model_name}` already set to `{tgt_stage}`."
-        else:
-            self._set_stage(model_name, tgt_stage)
+
+        self._set_stage(model_name, tgt_stage)
+
+        if tgt_stage == "Production":
             self._archive_models(model_name)
+
         return f"`{model_name}` sucessfully set to `{tgt_stage}`."
-
-if __name__ == "__main__":
-    client = MlflowClient()
-    mr = ModelRegistry(client)
-    # for model in mr._list_models():
-    #     print(model)
-
-    x = mr.set_model_stage("titanic", "elevate")
-    print(x)
-    x = mr.set_model_stage("insurance_premium", "elevate")
-    # x = mr.set_model_stage("titanic", "archive")
-    # x = mr.set_model_stage("insurance_premium", "archive")
-    print(x)
-    pm = mr.get_production_model()
-    print(f"active_model: {pm}")
-
-

@@ -15,6 +15,7 @@ from .baml_client.types import (
     TitanicInput
 )
 from ..backend.models.titanic import TitanicModelService
+from .models.registry import ModelRegistry
 # from ..backend.models.insurance import InsuranceModelService
 
 
@@ -30,6 +31,7 @@ mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 mlflow.set_experiment("Default")
 
 client = MlflowClient()
+mr = ModelRegistry(client)
 
 app = FastAPI(title="ML_LLM Ops Demo - Backend APIs", version="0.0.1")
 
@@ -38,36 +40,6 @@ class ChatRequest(BaseModel):
     prompt: str
 
 
-# ########################################################
-# TODO: maybe separate elevate/archive methods?
-def get_latest_version(model_name):
-    versions = client.search_model_versions(f"name='{model_name}'")
-    return max([int(x.version) for x in versions])
-
-
-def get_models():
-    models = {}
-    for rm in client.search_registered_models():
-        latest = get_latest_version(rm.name)
-        mv = client.get_model_version(rm.name, latest)
-        models[rm.name] = mv.tags.get("app_stage")
-    return models
-
-
-# TODO: metadata that dhows valid options per action to user??
-# TODO: ensure only one model is in production at a time.
-def set_model_stage(model_name, operation):
-    version = get_latest_version(model_name)
-    target_stage = "Production" if operation == "elevate" else "Archived"
-    current_stage = client.get_model_version(model_name, version).tags.get("app_stage")
-
-    if current_stage != target_stage:
-        client.set_model_version_tag(
-            name=model_name, version=version, key="app_stage", value=target_stage
-        )
-        return f"`{model_name}` sucessfully set to `{target_stage}`."
-    else:
-        return f"No action taken. `{model_name}` already set to `{target_stage}`."
 
 
 def render_markdown(models):
@@ -87,22 +59,24 @@ def home():
 
 @app.post("/chat")
 def chat(request: ChatRequest):
-    MODELS = get_models()
+    MODELS = mr.list_models()
     resp = b.SelectTool(request.prompt)
 
-    # TODO: will handle intent responses later...
+    # List Registry Models
     if isinstance(resp, ModelRegistryAPI):
         return {"content": render_markdown(MODELS)}
 
+    # Elevate/Archive Models
     if isinstance(resp, ModelStageAPI):
-        if resp.model_name in MODELS.keys():
-            result = set_model_stage(resp.model_name, resp.operation)
+        if resp.model_name in mr:
+            result = mr.set_model_stage(resp.model_name, resp.operation)
             return {"content": result}
         else:
             return {
                 "content": f"You requested an invalid model. Choose from\n{render_markdown(MODELS)}"
             }
 
+    # Predict f(x)
     if isinstance(resp, ModelInferenceAPI):
         svc = TitanicModelService()
         mi = b.TitanicValidateInput(request.prompt)  # TODO: change to val instead of mi
@@ -132,6 +106,7 @@ def chat(request: ChatRequest):
         }
 
     # TODO: inject list of approved actions
+    # Guardrail
     if isinstance(resp, NonApprovedRequest):
         result = (
             "This is not an approved request. You may ask about <insert_list> later.."

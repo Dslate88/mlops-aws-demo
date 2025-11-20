@@ -13,19 +13,12 @@ class ModelRegistry:
         self.client = client
 
     def __contains__(self, item):
-        return item in self._list_models()
+        return item in self.list_models()
         
     def _latest_version(self, model_name):
         versions = self.client.search_model_versions(f"name='{model_name}'")
         return max([int(x.version) for x in versions])
 
-    def _list_models(self):
-        models = {}
-        for rm in self.client.search_registered_models():
-            latest = self._latest_version(rm.name)
-            mv = self.client.get_model_version(rm.name, latest)
-            models[rm.name] = mv.tags.get("app_stage")
-        return models
 
     def _get_stage(self, model_name):
         version = self._latest_version(model_name)
@@ -43,14 +36,22 @@ class ModelRegistry:
 
 
     def _archive_models(self, tgt_model):
-        for model, stage in self._list_models().items():
+        for model, stage in self.list_models().items():
             if stage == "Production" and model != tgt_model:
                 self.client.set_model_version_tag(
                     name=model, version=self._latest_version(model), key="app_stage", value="Archived"
                 )
 
+    def list_models(self):
+        models = {}
+        for rm in self.client.search_registered_models():
+            latest = self._latest_version(rm.name)
+            mv = self.client.get_model_version(rm.name, latest)
+            models[rm.name] = mv.tags.get("app_stage")
+        return models
+
     def get_production_model(self):
-        for name, stage in self._list_models().items():
+        for name, stage in self.list_models().items():
             if stage == "Production":
                 return name
         return None

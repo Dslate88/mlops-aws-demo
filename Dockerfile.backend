@@ -9,7 +9,6 @@ COPY pyproject.toml uv.lock /app/
 RUN pip install uv && uv sync --only-group backend && uv run baml-cli generate --from src/backend/
 
 # COPY src/backend ./src/backend
-#
 ENV PYTHONPATH=/app/src
 ENV VIRTUAL_ENV=/app/.venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"

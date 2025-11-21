@@ -1,0 +1,19 @@
+FROM python:3.13-slim-bookworm
+
+COPY src/ app/src
+
+# install dependencies
+WORKDIR /app
+
+COPY pyproject.toml uv.lock /app/
+RUN pip install uv && uv sync --only-group frontend
+
+# COPY src/frontend ./src/frontend
+ENV PYTHONPATH=/app/src
+ENV VIRTUAL_ENV=/app/.venv
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+EXPOSE 8501
+
+CMD ["streamlit", "run", "src/frontend/app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+

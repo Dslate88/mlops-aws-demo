@@ -32,4 +32,14 @@ services:
     ports:
       - "5001:5000"
 
-# NOTE: left off troubleshooting dns rebinding protection error on docker compose up
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: mlops-frontend
+    environment:
+      - BACKEND_URL=http://backend:8000/chat
+    ports:
+      - "8502:8501"
+    depends_on:
+      - backend

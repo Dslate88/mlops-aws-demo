@@ -14,7 +14,7 @@ locals {
 
   priv_cidrs       = ["10.0.1.0/24", "10.0.3.0/24"]
   priv_avail_zones = ["us-east-1a", "us-east-1b"]
-  priv_map_ip      = true
+  priv_map_ip      = false
   priv_nat_gateway = true
 
   ecr_containers = ["${local.stack_name}-frontend", "${local.stack_name}-backend"]

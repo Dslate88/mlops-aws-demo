@@ -5,11 +5,15 @@ BACKEND_REPO = mlops-demo-backend
 FRONTEND_REPO = mlops-demo-frontend
 
 TAG ?= $(shell git rev-parse --short HEAD)
+LATEST_TAG = latest
+
 IMAGE_PREFIX = $(ACCOUNT_ID).dkr.ecr.$(REGION).amazonaws.com
-BACKEND_IMAGE = $(BACKEND_REPO):$(TAG)
+BACKEND_IMAGE  = $(BACKEND_REPO):$(TAG)
 FRONTEND_IMAGE = $(FRONTEND_REPO):$(TAG)
-BACKEND_ECR_IMAGE = $(IMAGE_PREFIX)/$(BACKEND_REPO):$(TAG)
+BACKEND_ECR_IMAGE  = $(IMAGE_PREFIX)/$(BACKEND_REPO):$(TAG)
 FRONTEND_ECR_IMAGE = $(IMAGE_PREFIX)/$(FRONTEND_REPO):$(TAG)
+BACKEND_ECR_IMAGE_LATEST  = $(IMAGE_PREFIX)/$(BACKEND_REPO):$(LATEST_TAG)
+FRONTEND_ECR_IMAGE_LATEST = $(IMAGE_PREFIX)/$(FRONTEND_REPO):$(LATEST_TAG)
 
 backend:
 	uvicorn src.backend.main:app --reload
@@ -48,16 +52,20 @@ docker-build-all: docker-build-backend docker-build-frontend
 
 docker-tag-backend: docker-build-backend
 	docker tag $(BACKEND_IMAGE) $(BACKEND_ECR_IMAGE)
+	docker tag $(BACKEND_IMAGE) $(BACKEND_ECR_IMAGE_LATEST)
 
 docker-tag-frontend: docker-build-frontend
 	docker tag $(FRONTEND_IMAGE) $(FRONTEND_ECR_IMAGE)
+	docker tag $(FRONTEND_IMAGE) $(FRONTEND_ECR_IMAGE_LATEST)
 
 docker-tag-all: docker-tag-backend docker-tag-frontend
 
 docker-push-backend: ecr-auth docker-tag-backend
 	docker push $(BACKEND_ECR_IMAGE)
+	docker push $(BACKEND_ECR_IMAGE_LATEST)
 
 docker-push-frontend: ecr-auth docker-tag-frontend
 	docker push $(FRONTEND_ECR_IMAGE)
+	docker push $(FRONTEND_ECR_IMAGE_LATEST)
 
 docker-push-all: docker-push-backend docker-push-frontend

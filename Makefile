@@ -1,3 +1,16 @@
+REGION ?= us-east-1
+ACCOUNT_ID ?= $(shell aws sts get-caller-identity --query Account --output text)
+
+BACKEND_REPO = mlops-demo-backend
+FRONTEND_REPO = mlops-demo-frontend
+
+TAG ?= $(shell git rev-parse --short HEAD)
+IMAGE_PREFIX = $(ACCOUNT_ID).dkr.ecr.$(REGION).amazonaws.com
+BACKEND_IMAGE = $(BACKEND_REPO):$(TAG)
+FRONTEND_IMAGE = $(FRONTEND_REPO):$(TAG)
+BACKEND_ECR_IMAGE = $(IMAGE_PREFIX)/$(BACKEND_REPO):$(TAG)
+FRONTEND_ECR_IMAGE = $(IMAGE_PREFIX)/$(FRONTEND_REPO):$(TAG)
+
 backend:
 	uvicorn src.backend.main:app --reload
 
@@ -21,3 +34,30 @@ baml-dev:
 
 docker-up:
 	docker compose up --build
+
+ecr-auth:
+	aws ecr get-login-password --region ${REGION} | docker login --username AWS --password-stdin ${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com
+
+docker-build-backend:
+	docker build -f Dockerfile.backend -t $(BACKEND_IMAGE) .
+
+docker-build-frontend:
+	docker build -f Dockerfile.frontend -t $(FRONTEND_IMAGE) .
+
+docker-build-all: docker-build-backend docker-build-frontend
+
+docker-tag-backend: docker-build-backend
+	docker tag $(BACKEND_IMAGE) $(BACKEND_ECR_IMAGE)
+
+docker-tag-frontend: docker-build-frontend
+	docker tag $(FRONTEND_IMAGE) $(FRONTEND_ECR_IMAGE)
+
+docker-tag-all: docker-tag-backend docker-tag-frontend
+
+docker-push-backend: ecr-auth docker-tag-backend
+	docker push $(BACKEND_ECR_IMAGE)
+
+docker-push-frontend: ecr-auth docker-tag-frontend
+	docker push $(FRONTEND_ECR_IMAGE)
+
+docker-push-all: docker-push-backend docker-push-frontend

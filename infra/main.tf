@@ -37,6 +37,22 @@ resource "aws_ecr_repository" "containers" {
   }
 }
 
+## CW for ECS
+resource "aws_cloudwatch_log_group" "backend_container" {
+  name              = "/ecs/${local.stack_name}/${local.env}-backend"
+  retention_in_days = 14
+}
+
+resource "aws_cloudwatch_log_group" "frontend_container" {
+  name              = "/ecs/${local.stack_name}/${local.env}-frontend"
+  retention_in_days = 14
+}
+
+resource "aws_cloudwatch_log_group" "mlflow_container" {
+  name              = "/ecs/${local.stack_name}/${local.env}-mlfow"
+  retention_in_days = 14
+}
+
 resource "aws_ecr_lifecycle_policy" "webapp" {
   for_each   = aws_ecr_repository.containers
   repository = each.value.name

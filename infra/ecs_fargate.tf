@@ -31,7 +31,6 @@ resource "aws_ecs_service" "app" {
   }
 }
 
-
 resource "aws_ecs_task_definition" "app" {
   family                   = "${local.stack_name}-app"
   network_mode             = "awsvpc" # containers share ENI
@@ -61,7 +60,7 @@ resource "aws_ecs_task_definition" "app" {
       logConfiguration = {
         logDriver = "awslogs"
         options = {
-          awslogs-group         = "/ecs/${local.stack_name}-frontend"
+          awslogs-group         = aws_cloudwatch_log_group.frontend_container.name
           awslogs-region        = var.aws_region
           awslogs-stream-prefix = "ecs"
         }
@@ -86,7 +85,7 @@ resource "aws_ecs_task_definition" "app" {
       logConfiguration = {
         logDriver = "awslogs"
         options = {
-          awslogs-group         = "/ecs/${local.stack_name}-backend"
+          awslogs-group         = aws_cloudwatch_log_group.backend_container.name
           awslogs-region        = var.aws_region
           awslogs-stream-prefix = "ecs"
         }
@@ -113,7 +112,7 @@ resource "aws_ecs_task_definition" "app" {
       logConfiguration = {
         logDriver = "awslogs"
         options = {
-          awslogs-group         = "/ecs/${local.stack_name}-mlflow"
+          awslogs-group         = aws_cloudwatch_log_group.mlflow_container.name
           awslogs-region        = var.aws_region
           awslogs-stream-prefix = "ecs"
         }
@@ -121,4 +120,3 @@ resource "aws_ecs_task_definition" "app" {
     }
   ])
 }
-

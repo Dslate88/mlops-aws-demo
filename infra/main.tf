@@ -17,7 +17,12 @@ locals {
   priv_map_ip      = false
   priv_nat_gateway = true
 
+  # ecr
   ecr_containers = ["${local.stack_name}-frontend", "${local.stack_name}-backend"]
+
+  # r53
+  domain_name = "devinslate.com"
+  subdomain = "mlops-demo"
 
 }
 

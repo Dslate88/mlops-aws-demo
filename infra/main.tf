@@ -18,7 +18,7 @@ locals {
   priv_nat_gateway = true
 
   # ecr
-  ecr_containers = ["${local.stack_name}-frontend", "${local.stack_name}-backend"]
+  ecr_containers = ["${local.stack_name}-frontend", "${local.stack_name}-backend", "${local.stack_name}-mlflow"]
 
   # r53
   domain_name = "devinslate.com"

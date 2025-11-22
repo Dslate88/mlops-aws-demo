@@ -2,6 +2,36 @@ resource "aws_ecs_cluster" "main" {
   name = "${local.stack_name}-${local.env}"
 }
 
+resource "aws_ecs_service" "app" {
+  name            = "${local.stack_name}-svc-${local.env}"
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = aws_ecs_task_definition.app.arn
+  launch_type     = "FARGATE"
+  desired_count   = 1
+
+  network_configuration {
+    subnets         = aws_subnet.private[*].id
+    security_groups = [aws_security_group.ecs_tasks.id]
+    assign_public_ip = false
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.frontend.arn
+    container_name   = "frontend"
+    container_port   = 8501
+  }
+
+  deployment_minimum_healthy_percent = 50
+  deployment_maximum_percent         = 200
+
+  lifecycle {
+    ignore_changes = [
+      desired_count
+    ]
+  }
+}
+
+
 resource "aws_ecs_task_definition" "app" {
   family                   = "${local.stack_name}-app"
   network_mode             = "awsvpc" # containers share ENI

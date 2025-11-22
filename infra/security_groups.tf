@@ -1,6 +1,6 @@
 resource "aws_security_group" "alb" {
-  name        = "${local.stack_name}-alb-sg"
-  vpc_id      = aws_vpc.main.id
+  name   = "${local.stack_name}-alb-sg"
+  vpc_id = aws_vpc.main.id
 
   ingress {
     from_port   = 80

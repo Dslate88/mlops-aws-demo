@@ -22,7 +22,7 @@ locals {
 
   # r53
   domain_name = "devinslate.com"
-  subdomain = "mlops-demo"
+  subdomain   = "mlops-demo"
 
 }
 

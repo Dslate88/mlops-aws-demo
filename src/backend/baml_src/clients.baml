@@ -23,3 +23,15 @@ client<llm> OPENAIGPT5_NANO {
     supports_streaming false
   }
 }
+
+client<llm> DEFAULT {
+  provider aws-bedrock
+  options {
+    model "anthropic.claude-3-5-sonnet-20240620-v1:0"
+    region us-east-1
+    inference_configuration {
+      max_tokens 100
+      temperature 0.0
+    }
+  }
+}

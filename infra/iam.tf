@@ -29,7 +29,23 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
-# resource "aws_iam_role_policy_attachment" "ecr_read_only" {
-#   role       = aws_iam_role.app.name
-#   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
-# }
+resource "aws_iam_policy" "bedrock_invoke_model" {
+  name        = "${local.stack_name}-bedrock-invoke-model"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = [
+          "bedrock:InvokeModel",
+        ]
+        Resource = "arn:aws:bedrock:us-east-1::foundation-model/*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_task_bedrock" {
+  role       = aws_iam_role.ecs_task.name
+  policy_arn = aws_iam_policy.bedrock_invoke_model.arn
+}

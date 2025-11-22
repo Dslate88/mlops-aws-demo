@@ -43,10 +43,10 @@ ecr-auth:
 	aws ecr get-login-password --region ${REGION} | docker login --username AWS --password-stdin ${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com
 
 docker-build-backend:
-	docker build -f Dockerfile.backend -t $(BACKEND_IMAGE) .
+	docker build --platform=linux/amd64 -f Dockerfile.backend -t $(BACKEND_IMAGE) .
 
 docker-build-frontend:
-	docker build -f Dockerfile.frontend -t $(FRONTEND_IMAGE) .
+	docker build --platform=linux/amd64 -f Dockerfile.frontend -t $(FRONTEND_IMAGE) .
 
 docker-build-all: docker-build-backend docker-build-frontend
 

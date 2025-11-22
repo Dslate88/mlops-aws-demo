@@ -36,7 +36,7 @@ resource "aws_ecs_task_definition" "app" {
   network_mode             = "awsvpc" # containers share ENI
   requires_compatibilities = ["FARGATE"]
   cpu                      = "1024"
-  memory                   = "2048"
+  memory                   = "4096"
   execution_role_arn       = aws_iam_role.ecs_task_execution.arn
   task_role_arn            = aws_iam_role.ecs_task.arn
 
@@ -55,6 +55,12 @@ resource "aws_ecs_task_definition" "app" {
         {
           name  = "BACKEND_URL"
           value = "http://localhost:8000/chat"
+        }
+      ]
+      dependsOn = [
+        {
+          containerName = "backend"
+          condition     = "HEALTHY"
         }
       ]
       logConfiguration = {
@@ -82,6 +88,19 @@ resource "aws_ecs_task_definition" "app" {
           value = "http://localhost:5000"
         }
       ]
+      dependsOn = [
+        {
+          containerName = "mlflow"
+          condition     = "HEALTHY"
+        }
+      ]
+      healthCheck = {
+        command     = ["CMD-SHELL", "python -c \"import sys,urllib.request; urllib.request.urlopen('http://localhost:8000/health'); sys.exit(0)\" || exit 1"]
+        interval    = 30
+        timeout     = 5
+        retries     = 3
+        startPeriod = 60
+      }
       logConfiguration = {
         logDriver = "awslogs"
         options = {
@@ -109,6 +128,13 @@ resource "aws_ecs_task_definition" "app" {
         "--host", "0.0.0.0",
         "--port", "5000"
       ]
+      healthCheck = {
+        command     = ["CMD-SHELL", "python -c \"import sys,urllib.request; urllib.request.urlopen('http://localhost:5000'); sys.exit(0)\" || exit 1"]
+        interval    = 30
+        timeout     = 5
+        retries     = 3
+        startPeriod = 30
+      }
       logConfiguration = {
         logDriver = "awslogs"
         options = {

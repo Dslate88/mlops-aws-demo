@@ -1,3 +1,4 @@
+import os
 import requests
 
 import streamlit as st
@@ -7,7 +8,7 @@ st.title("mlops-demo-chat")
 ## TODO: ensure users know that history is displayed, but only last message is submitted each time.
 ## TODO: create .env/config pattern
 # TODO: add info that informs users of 'rules' of the app. ex: only 1 prod model at a time.
-BACKEND_URL = "http://localhost:8000/chat"
+BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000/chat")
 
 # session_state initialize
 if "messages" not in st.session_state:

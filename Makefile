@@ -18,3 +18,6 @@ mlflow:
 
 baml-dev:
 	uv run baml-cli dev --from src/backend
+
+docker-up:
+	docker compose up --build

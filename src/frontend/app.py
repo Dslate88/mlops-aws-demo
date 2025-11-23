@@ -20,14 +20,16 @@ if "help_prompt" not in st.session_state:
     st.session_state.help_prompt = None
 
 # helper prompt buttons
-col1, col2, col3, col4 = st.columns(4)
+col1, col2, col3, col4, col5 = st.columns(5)
 if col1.button("List models"):
     st.session_state.help_prompt = "What models are available?"
-if col2.button("Elevate model"):
+if col2.button("Remove model"):
+    st.session_state.help_prompt = "Remove titanic model"
+if col3.button("Elevate model"):
     st.session_state.help_prompt = "Elevate titanic to production."
-if col3.button("Train model"):
+if col4.button("Train model"):
     st.session_state.help_prompt = "Train titanic model with test size of .3"
-if col4.button("Test Model"):
+if col5.button("Test Model"):
     st.session_state.help_prompt = "Test model"
 
 # display messages upon rerun

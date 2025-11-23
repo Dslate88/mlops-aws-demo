@@ -16,6 +16,7 @@ from .baml_client.types import (
     NonApprovedRequest,
     ModelInferenceAPI,
     ModelTrainAPI,
+    ModelRemoveAPI
 )
 from .models.registry import ModelRegistry
 from .models.factory import ModelFactory
@@ -46,7 +47,7 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     content: str
     kind: Literal[
-        "list_models", "elevate", "missing_inputs", "train", "inference", "error"
+        "list_models", "remove_model", "elevate", "missing_inputs", "train", "inference", "error"
     ]
     error: bool = False
     metadata: Optional[dict] = None
@@ -87,7 +88,6 @@ def active_model():
         version=version,
     )
 
-
 @app.post("/chat")
 def chat(request: ChatRequest):
     MODELS = mr.list_models()
@@ -101,6 +101,15 @@ def chat(request: ChatRequest):
             return ChatResponse(
                 content=render_markdown(MODELS),
                 kind="list_models",
+            )
+
+    # Remove model from registry
+    if isinstance(resp, ModelRemoveAPI):
+        with lock:
+            mr.remove_model(resp.model_name)
+            return ChatResponse(
+                content="sucessfully removed {resp.model_name} from MLFlow Registry.",
+                kind="remove_model",
             )
 
     # Elevate/Archive Models

@@ -112,13 +112,21 @@ resource "aws_ecs_task_definition" "app" {
     },
     {
       name      = "mlflow"
-      image     = "${aws_ecr_repository.containers["${local.stack_name}-mlflow"].repository_url}:latest"
+      image     = "ghcr.io/mlflow/mlflow:v3.6.0"
       essential = true
       portMappings = [
         {
           containerPort = 5000
           protocol      = "tcp"
         }
+      ]
+      command = [
+        "mlflow",
+        "server",
+        "--backend-store-uri", "sqlite:///mlflow.db",
+        "--default-artifact-root", "/mlruns",
+        "--host", "0.0.0.0",
+        "--port", "5000"
       ]
       healthCheck = {
         command     = ["CMD-SHELL", "python -c \"import sys,urllib.request; urllib.request.urlopen('http://localhost:5000'); sys.exit(0)\" || exit 1"]

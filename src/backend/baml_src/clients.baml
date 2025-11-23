@@ -30,7 +30,7 @@ client<llm> DEFAULT {
     model "anthropic.claude-3-5-sonnet-20240620-v1:0"
     region us-east-1
     inference_configuration {
-      max_tokens 100
+      max_tokens 500
       temperature 0.0
     }
   }

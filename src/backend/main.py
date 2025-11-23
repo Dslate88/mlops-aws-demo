@@ -116,9 +116,17 @@ def chat(request: ChatRequest):
             )
 
     if isinstance(resp, ModelTrainAPI):
-        svc = ModelFactory.create("titanic")
+        if not resp.model_name:
+            return ChatResponse(
+                content=f"You requested an invalid model to train. Choose from\n{render_markdown(MODELS)}",
+                kind="error",
+                error=True,
+            )
+
+        svc = ModelFactory.create(resp.model_name)
         val = svc.val_train(request.prompt)
-        if val.test_size < 0 or val.test_size > 1:
+
+        if val.test_size is None or not (0 <= val.test_size <= 1):
             return ChatResponse(
                 content="test_size must be between 0 and 1",
                 kind="error",

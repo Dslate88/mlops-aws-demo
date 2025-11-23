@@ -27,8 +27,7 @@ class TitanicTrain {
   @@description(#"
     These are user selected config for training a machine learning model.
   "#)
-  // features "sex" | "pclass" | "embarktypes" | "alonetypes"
-  test_size float? //@assert(between_0_and_1, {{ this > 0.0 and this < 1.0 }})
+  test_size float?
 }
 
 function TitanicValidateTrain(user_message: string) -> TitanicTrain {
@@ -47,7 +46,16 @@ test TrainComplete {
   functions [TitanicValidateTrain]
   args {
     user_message #"
-      set test size to 5.2
+      train model titanic set test size to 5.2
+    "#
+  }
+}
+
+test TrainMissing {
+  functions [TitanicValidateTrain]
+  args {
+    user_message #"
+      train titanic model
     "#
   }
 }

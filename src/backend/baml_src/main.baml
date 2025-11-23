@@ -49,7 +49,7 @@ class ModelTrainAPI {
   intent "model_train" @description(#"
     User wants to train a new model.
   "#)
-  model_name string
+  model_name string?
 }
 
 class NonApprovedRequest {
@@ -99,7 +99,7 @@ test ModelTrain {
   functions [SelectTool]
   args {
     user_message #"
-      I want to train the titanic model
+      I want to train a model.
     "#
   }
 }

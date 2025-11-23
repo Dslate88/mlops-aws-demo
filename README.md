@@ -27,3 +27,6 @@
 - pipx install uv
 - pipx install ruff
 - source .venv/bin/activate
+- short-term key bedrock
+- makefile
+- compose + containers

@@ -14,7 +14,7 @@ from .baml_client.types import (
     ModelStageAPI,
     NonApprovedRequest,
     ModelInferenceAPI,
-    ModelTrainAPI
+    ModelTrainAPI,
 )
 from .models.registry import ModelRegistry
 from .models.factory import ModelFactory
@@ -39,19 +39,20 @@ app = FastAPI(title="ML_LLM Ops Demo - Backend APIs", version="0.0.1")
 class ChatRequest(BaseModel):
     prompt: str
 
+
 # TODO: keep elevate as only action, remove ability to archive in baml layer...
 class ChatResponse(BaseModel):
     content: str
     kind: Literal[
-        "list_models",
-        "elevate",
-        "missing_inputs",
-        "train",
-        "inference",
-        "error"
+        "list_models", "elevate", "missing_inputs", "train", "inference", "error"
     ]
     error: bool = False
     metadata: Optional[dict] = None
+
+
+class ActiveModelResponse(BaseModel):
+    name: str
+    version: int
 
 
 # TODO: move me
@@ -69,9 +70,21 @@ def render_markdown(models):
 def home():
     return {"message": "Hello!"}
 
+
 @app.get("/health")
 def health():
     return {"status": "healthy"}
+
+
+@app.get("/active-model")
+def active_model():
+    active_model = mr.get_production_model()
+    version = mr._latest_version(active_model)
+    return ActiveModelResponse(
+        name=active_model,
+        version=version,
+    )
+
 
 @app.post("/chat")
 def chat(request: ChatRequest):
@@ -99,48 +112,53 @@ def chat(request: ChatRequest):
             return ChatResponse(
                 content=f"You requested an invalid model. Choose from\n{render_markdown(MODELS)}",
                 kind="elevate",
-                error=True
+                error=True,
             )
-            
-    if isinstance(resp, ModelTrainAPI):
-        # TODO: will need validate_inference, and validate_train
-        svc, validate_fn = ModelFactory.create("titanic")
-        onnx_model, acc = svc.train()
 
-        mr.set_model_stage("titanic", "archive")  # Should it be elevated to prod right away?
+    if isinstance(resp, ModelTrainAPI):
+        svc = ModelFactory.create("titanic")
+        val = svc.val_train(request.prompt)
+        if val.test_size < 0 or val.test_size > 1:
+            return ChatResponse(
+                content="test_size must be between 0 and 1",
+                kind="error",
+                error=True,
+            )
+
+        result = svc.train(val)
+
+        content = f"`{result.get('model_name')}` trained with test_size=`{result.get('test_size')}` resulting in accuracy of `{result.get('accuracy')}`"
+        mr.set_model_stage("titanic", "elevate")
+
         return ChatResponse(
-            content=str(acc),
+            content=content,
             kind="train",
+            metadata={
+                "train_results": result,
+            },
         )
 
-    # Predict f(x)
     if isinstance(resp, ModelInferenceAPI):
-        # Confirm a model is in Production
         if not active_model:
             return ChatResponse(
                 content="No model is currently in Production. Ask me to elevate a model first.",
                 kind="error",
-                error=True
+                error=True,
             )
 
-        # Factory Pattern
-        svc, validate_fn = ModelFactory.create(active_model)
+        svc = ModelFactory.create(active_model)
+        val = svc.val_inference(request.prompt)
 
-        # Extract features from user input
-        val = validate_fn(request.prompt)
-
-        # Handle incomplete features (if any)
         if val.missing_details:
             incomplete_response = svc.missing_response(val.missing_details)
             return ChatResponse(
                 content=incomplete_response,
                 kind="missing_inputs",
-                metadata= {
+                metadata={
                     "valid_values": svc.valid_values(),
                 },
             )
 
-        # Run Inference
         features = svc.transform(val)
         raw_pred = svc.predict(
             features
@@ -165,5 +183,5 @@ def chat(request: ChatRequest):
         return ChatResponse(
             content="This is not an approved request. Try again.",
             kind="error",
-            error=True
+            error=True,
         )

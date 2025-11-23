@@ -16,7 +16,8 @@ from skl2onnx import to_onnx
 import numpy as np
 
 from .base import BaseModelService
-from ..baml_client.types import TitanicInput
+from ..baml_client import b
+from ..baml_client.types import TitanicInput, TitanicTrain
 
 from .registry import ModelRegistry
 
@@ -28,10 +29,12 @@ mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 mlflow.set_experiment("Default")
 
 class TitanicModelService(BaseModelService):
-    model_name = "titanic"
+    val_inference = b.TitanicValidateInput
+    val_train = b.TitanicValidateTrain
 
     def __init__(self):
         super().__init__()
+        self.model_name = "titanic"
         self.map = {
             "SexTypes": {
                 "MALE": "male",
@@ -83,10 +86,8 @@ class TitanicModelService(BaseModelService):
         label = "didnt make it" if pred == 0 else "survived"
         return f"you probably {label}"
 
-    # def train(self, cfg):
-    def train(self):
-        MODEL_NAME = "titanic"
-        with mlflow.start_run(run_name="titanic-logreg-onnx"):
+    def train(self, inp: TitanicTrain):
+        with mlflow.start_run(run_name="titanic-logreg-onnx") as run:
             titanic = sns.load_dataset("titanic")
             
             y = titanic["survived"]
@@ -100,7 +101,7 @@ class TitanicModelService(BaseModelService):
             X["alone"] = X["alone"].astype("int64")
             
             X_train, X_test, y_train, y_test = train_test_split(
-                X, y, test_size=0.2, random_state=42, stratify=y
+                X, y, test_size=inp.test_size, random_state=42, stratify=y
             )
             
             categorical_features = ["sex", "pclass", "embarked", "alone"]
@@ -122,9 +123,10 @@ class TitanicModelService(BaseModelService):
             
             y_pred = clf.predict(X_test)
             acc = accuracy_score(y_test, y_pred)
-            print(f"Test accuracy: {acc:.3f}")
             mlflow.log_metric("accuracy", acc)
-            # return str(acc)
+            mlflow.log_metric("x_train_size", len(X_train))
+            mlflow.log_metric("x_test_size", len(X_test))
+            mlflow.log_param("test_size", inp.test_size)
             
             example = pd.DataFrame(
                 [
@@ -132,7 +134,7 @@ class TitanicModelService(BaseModelService):
                         "sex": "female",
                         "pclass": 1,
                         "embarked": "S",
-                        "alone": 0,   # 0 = not alone, 1 = alone
+                        "alone": 0,
                     }
                 ]
             )
@@ -141,7 +143,15 @@ class TitanicModelService(BaseModelService):
             mlflow.onnx.log_model(
                 onnx_model=onnx_model,
                 name="model",
-                registered_model_name=MODEL_NAME,
+                registered_model_name=self.model_name,
             )
-            print("Logged ONNX model to MLflow and registered under:", MODEL_NAME)
-            return onnx_model, acc
+
+            return {
+                    "accuracy": round(acc, 3),
+                    "test_size": inp.test_size,
+                    "x_train_rows": len(X_train),
+                    "x_test_rows": len(X_test),
+                    "model_name": self.model_name,
+                    "run_id": run.info.run_id,
+                    "experiment_id": run.info.experiment_id
+                    }

@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 from ..baml_client import b
 from .titanic import TitanicModelService
 # from .insurance import InsuranceModelService
@@ -5,17 +7,11 @@ from .titanic import TitanicModelService
 
 class ModelFactory:
     registry = {
-        "titanic": {
-            "service_cls": TitanicModelService,
-            "validate_fn": b.TitanicValidateInput,
-        },
-        # "insurance_premium": {
-        #     "service_cls": InsuranceModelService,
-        #     "validate_fn": b.InsuranceValidateInput,
-        # },
+        "titanic": TitanicModelService,
+        # "insurance": InsuranceModelService,
     }
 
     @classmethod
     def create(cls, model_name):
-        entry = cls.registry[model_name]
-        return entry["service_cls"](), entry["validate_fn"]
+        service_cls = cls.registry[model_name]
+        return service_cls()

@@ -2,6 +2,7 @@ resource "aws_ecs_cluster" "main" {
   name = "${local.stack_name}-${local.env}"
 }
 
+# TODO: force rollout when new image pushed to ecr
 resource "aws_ecs_service" "app" {
   name            = "${local.stack_name}-svc-${local.env}"
   cluster         = aws_ecs_cluster.main.id
@@ -54,7 +55,7 @@ resource "aws_ecs_task_definition" "app" {
       environment = [
         {
           name  = "BACKEND_URL"
-          value = "http://localhost:8000/chat"
+          value = "http://localhost:8000"
         }
       ]
       dependsOn = [

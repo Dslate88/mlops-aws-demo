@@ -56,3 +56,7 @@ class BaseModelService(ABC):
     @abstractmethod
     def format_response(self, raw_pred):
         pass
+
+    @abstractmethod
+    def train(self, config):
+        pass

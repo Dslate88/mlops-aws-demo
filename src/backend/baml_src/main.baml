@@ -1,4 +1,5 @@
-function SelectTool(user_message: string) -> ModelRegistryAPI | NonApprovedRequest | ModelStageAPI | ModelInferenceAPI {
+// TODO: add an enum for model_name or something..
+function SelectTool(user_message: string) -> ModelRegistryAPI | NonApprovedRequest | ModelStageAPI | ModelInferenceAPI | ModelTrainAPI {
   client "DEFAULT"
   prompt #"
     You are a router. Decide which intent fits best and populate the fields.
@@ -44,6 +45,13 @@ class ModelInferenceAPI {
   "#)
 }
 
+class ModelTrainAPI {
+  intent "model_train" @description(#"
+    User wants to train a new model.
+  "#)
+  model_name string
+}
+
 class NonApprovedRequest {
   intent "other" @description(#"
     Select this intent when none of the other options are appropriate.
@@ -83,6 +91,15 @@ test GeneralChat {
   args {
     user_message #"
       Hi
+    "#
+  }
+}
+
+test ModelTrain {
+  functions [SelectTool]
+  args {
+    user_message #"
+      I want to train the titanic model
     "#
   }
 }

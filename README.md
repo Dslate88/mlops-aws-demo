@@ -1,5 +1,7 @@
 # mlops-aws-demo
 
+Still actively developing, plan to continue working on this the next few weeks.
+
 My goal here is twofold:
 1) demonstrate a variety of skillsets, not create a 100% practical application
 2) have a repo I can continue to experiment with new patterns/architectures, etc (see section 7 below for example)
@@ -19,6 +21,10 @@ What this demo delivers:
 Things I plan to add (list will grow)
 - explore auto-updating docs via llm pattern [aws-blog-topic](https://aws.amazon.com/blogs/opensource/introducing-strands-agent-sops-natural-language-workflows-for-ai-agents/)
 - replace [baml](https://github.com/BoundaryML/baml) with [pydantic-ai](https://ai.pydantic.dev/)
+- make user interaction pattern more natural with pydantic-ai patterns
+- build structlog pattern
+- build/automate ml monitoring patterns
+- potentially carve out training into microservice and actually train/tune large models
 
 
 > see [Issue #3: mlops-aws-demo development summary](https://github.com/Dslate88/mlops-aws-demo/issues/3).

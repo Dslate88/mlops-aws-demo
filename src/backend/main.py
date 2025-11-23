@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 import onnxruntime as rt
 import numpy as np
 from typing import Optional, Literal
+from threading import Lock
 
 from .baml_client import b
 from .baml_client.types import (
@@ -35,6 +36,7 @@ mr = ModelRegistry(client)
 
 app = FastAPI(title="ML_LLM Ops Demo - Backend APIs", version="0.0.1")
 
+lock = Lock()
 
 class ChatRequest(BaseModel):
     prompt: str
@@ -95,92 +97,96 @@ def chat(request: ChatRequest):
     # List Registry Models
     # TODO: if there are no models, handle that with a tip encouraging a train
     if isinstance(resp, ModelRegistryAPI):
-        return ChatResponse(
-            content=render_markdown(MODELS),
-            kind="list_models",
-        )
+        with lock:
+            return ChatResponse(
+                content=render_markdown(MODELS),
+                kind="list_models",
+            )
 
     # Elevate/Archive Models
     if isinstance(resp, ModelStageAPI):
-        if resp.model_name in mr:
-            result = mr.set_model_stage(resp.model_name, resp.operation)
-            return ChatResponse(
-                content=result,
-                kind="elevate",
-            )
-        else:
-            return ChatResponse(
-                content=f"You requested an invalid model. Choose from\n{render_markdown(MODELS)}",
-                kind="elevate",
-                error=True,
-            )
+        with lock:
+            if resp.model_name in mr:
+                result = mr.set_model_stage(resp.model_name, resp.operation)
+                return ChatResponse(
+                    content=result,
+                    kind="elevate",
+                )
+            else:
+                return ChatResponse(
+                    content=f"You requested an invalid model. Choose from\n{render_markdown(MODELS)}",
+                    kind="elevate",
+                    error=True,
+                )
 
     if isinstance(resp, ModelTrainAPI):
-        if not resp.model_name:
+        with lock:
+            if not resp.model_name:
+                return ChatResponse(
+                    content=f"You requested an invalid model to train. Choose from\n{render_markdown(MODELS)}",
+                    kind="error",
+                    error=True,
+                )
+
+            svc = ModelFactory.create(resp.model_name)
+            val = svc.val_train(request.prompt)
+
+            if val.test_size is None or not (0 <= val.test_size <= 1):
+                return ChatResponse(
+                    content="test_size must be between 0 and 1",
+                    kind="error",
+                    error=True,
+                )
+
+            result = svc.train(val)
+
+            content = f"`{result.get('model_name')}` trained with test_size=`{result.get('test_size')}` resulting in accuracy of `{result.get('accuracy')}`"
+            mr.set_model_stage("titanic", "elevate")
+
             return ChatResponse(
-                content=f"You requested an invalid model to train. Choose from\n{render_markdown(MODELS)}",
-                kind="error",
-                error=True,
-            )
-
-        svc = ModelFactory.create(resp.model_name)
-        val = svc.val_train(request.prompt)
-
-        if val.test_size is None or not (0 <= val.test_size <= 1):
-            return ChatResponse(
-                content="test_size must be between 0 and 1",
-                kind="error",
-                error=True,
-            )
-
-        result = svc.train(val)
-
-        content = f"`{result.get('model_name')}` trained with test_size=`{result.get('test_size')}` resulting in accuracy of `{result.get('accuracy')}`"
-        mr.set_model_stage("titanic", "elevate")
-
-        return ChatResponse(
-            content=content,
-            kind="train",
-            metadata={
-                "train_results": result,
-            },
-        )
-
-    if isinstance(resp, ModelInferenceAPI):
-        if not active_model:
-            return ChatResponse(
-                content="No model is currently in Production. Ask me to elevate a model first.",
-                kind="error",
-                error=True,
-            )
-
-        svc = ModelFactory.create(active_model)
-        val = svc.val_inference(request.prompt)
-
-        if val.missing_details:
-            incomplete_response = svc.missing_response(val.missing_details)
-            return ChatResponse(
-                content=incomplete_response,
-                kind="missing_inputs",
+                content=content,
+                kind="train",
                 metadata={
-                    "valid_values": svc.valid_values(),
+                    "train_results": result,
                 },
             )
 
-        features = svc.transform(val)
-        raw_pred = svc.predict(
-            features
-        )  # TODO: change to preds with array of pred/proba?
-        content = svc.format_response(raw_pred)
+    if isinstance(resp, ModelInferenceAPI):
+        with lock:
+            if not active_model:
+                return ChatResponse(
+                    content="No model is currently in Production. Ask me to elevate a model first.",
+                    kind="error",
+                    error=True,
+                )
 
-        return ChatResponse(
-            content=content,
-            kind="inference",
-            metadata={
-                "raw_prediction": raw_pred,
-                "model_name": svc.model_name,
-            },
-        )
+            svc = ModelFactory.create(active_model)
+            val = svc.val_inference(request.prompt)
+
+            if val.missing_details:
+                incomplete_response = svc.missing_response(val.missing_details)
+                return ChatResponse(
+                    content=incomplete_response,
+                    kind="missing_inputs",
+                    metadata={
+                        "valid_values": svc.valid_values(),
+                    },
+                )
+
+            features = svc.transform(val)
+            raw_pred = svc.predict(
+                features
+            )  # TODO: change to preds with array of pred/proba?
+            content = svc.format_response(raw_pred)
+
+            return ChatResponse(
+                content=content,
+                kind="inference",
+                metadata={
+                    "raw_prediction": raw_pred,
+                    "model_name": svc.model_name,
+                },
+            )
 
     # TODO: add a help intent router
     # if isinstance(resp, HelpUser):

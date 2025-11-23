@@ -56,6 +56,7 @@ If I were thinking production:
 - I wouldnt be hosting my own MLflow on a container, preference a hosted service like Sagemaker or Databricks.
 - would need enterprise level logging of applicaiton activity
 - would configure CICD GHA patterns that auto-deploy feature branches to the cloud for testing (related to prior terraform module details)
+- leverage terraform module work to create CICD patterns for dev/qa/prod deployments, potentially based on release hooks if needed
 - Despite public/private subnet architecture enforcing 443 port, thats not enough for enterprise as you want to lock down ingress from company CIDR blocks
     - Related, a user authentication mechanism to ensure you are a valid enterprise member (i.e. Azure AD) in the public layer prior to private layer redirect.
 - More security, image scanning for vulnerabilites, etc.

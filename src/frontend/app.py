@@ -5,6 +5,8 @@ import streamlit as st
 
 st.title("mlops-demo-chat")
 
+# TODO: have a header/banner showing the active prod model + version?
+
 ## TODO: ensure users know that history is displayed, but only last message is submitted each time.
 ## TODO: create .env/config pattern
 # TODO: add info that informs users of 'rules' of the app. ex: only 1 prod model at a time.
@@ -60,11 +62,17 @@ def handle_inference(resp, is_error):
     if raw is not None and model_name:
         st.caption(f"{model_name} raw prediction: `{raw}`")
 
+def handle_train(resp, is_error):
+    # TODO: add more later
+    st.caption(f"Tip: try to test this model now!, or elevate")
+
+
 KIND_HANDLERS = {
     "list_models": handle_list_models,
     "elevate": handle_elevate,
     "missing_inputs": handle_missing_inputs,
     "inference": handle_inference,
+    "train": handle_train,
 }
 
 

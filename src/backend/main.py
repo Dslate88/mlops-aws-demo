@@ -14,6 +14,7 @@ from .baml_client.types import (
     ModelStageAPI,
     NonApprovedRequest,
     ModelInferenceAPI,
+    ModelTrainAPI
 )
 from .models.registry import ModelRegistry
 from .models.factory import ModelFactory
@@ -45,6 +46,7 @@ class ChatResponse(BaseModel):
         "list_models",
         "elevate",
         "missing_inputs",
+        "train",
         "inference",
         "error"
     ]
@@ -98,6 +100,12 @@ def chat(request: ChatRequest):
                 kind="elevate",
                 error=True
             )
+            
+    if isinstance(resp, ModelTrainAPI):
+        return ChatResponse(
+            content="You are training a model",
+            kind="train",
+        )
 
     # Predict f(x)
     if isinstance(resp, ModelInferenceAPI):

@@ -70,7 +70,7 @@ def home():
     return {"message": "Hello!"}
 
 @app.get("/health")
-def home():
+def health():
     return {"status": "healthy"}
 
 @app.post("/chat")
@@ -80,6 +80,7 @@ def chat(request: ChatRequest):
     resp = b.SelectTool(request.prompt)
 
     # List Registry Models
+    # TODO: if there are no models, handle that with a tip encouraging a train
     if isinstance(resp, ModelRegistryAPI):
         return ChatResponse(
             content=render_markdown(MODELS),
@@ -102,8 +103,13 @@ def chat(request: ChatRequest):
             )
             
     if isinstance(resp, ModelTrainAPI):
+        # TODO: will need validate_inference, and validate_train
+        svc, validate_fn = ModelFactory.create("titanic")
+        onnx_model, acc = svc.train()
+
+        mr.set_model_stage("titanic", "archive")  # Should it be elevated to prod right away?
         return ChatResponse(
-            content="You are training a model",
+            content=str(acc),
             kind="train",
         )
 
@@ -149,6 +155,9 @@ def chat(request: ChatRequest):
                 "model_name": svc.model_name,
             },
         )
+
+    # TODO: add a help intent router
+    # if isinstance(resp, HelpUser):
 
     # TODO: inject list of approved actions
     # Guardrail

@@ -1,8 +1,31 @@
+import os
+import mlflow
+import mlflow.onnx
+from mlflow.tracking import MlflowClient
+
+import seaborn as sns
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import Pipeline
+from sklearn.metrics import accuracy_score
+from skl2onnx import to_onnx
+
 import numpy as np
 
 from .base import BaseModelService
 from ..baml_client.types import TitanicInput
 
+from .registry import ModelRegistry
+
+client = MlflowClient()
+mr = ModelRegistry(client)
+
+MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "http://127.0.0.1:5000/")
+mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
+mlflow.set_experiment("Default")
 
 class TitanicModelService(BaseModelService):
     model_name = "titanic"
@@ -59,3 +82,66 @@ class TitanicModelService(BaseModelService):
         pred = raw_pred["prediction"]
         label = "didnt make it" if pred == 0 else "survived"
         return f"you probably {label}"
+
+    # def train(self, cfg):
+    def train(self):
+        MODEL_NAME = "titanic"
+        with mlflow.start_run(run_name="titanic-logreg-onnx"):
+            titanic = sns.load_dataset("titanic")
+            
+            y = titanic["survived"]
+            X = titanic[["sex", "pclass", "embarked", "alone"]].copy()
+            
+            mask = X.notna().all(axis=1) & y.notna()
+            X = X[mask]
+            y = y[mask]
+            
+            X["pclass"] = X["pclass"].astype("category")
+            X["alone"] = X["alone"].astype("int64")
+            
+            X_train, X_test, y_train, y_test = train_test_split(
+                X, y, test_size=0.2, random_state=42, stratify=y
+            )
+            
+            categorical_features = ["sex", "pclass", "embarked", "alone"]
+            
+            preprocess = ColumnTransformer(
+                transformers=[
+                    ("cat", OneHotEncoder(handle_unknown="ignore"), categorical_features),
+                ]
+            )
+            
+            clf = Pipeline(
+                steps=[
+                    ("preprocess", preprocess),
+                    ("model", LogisticRegression(max_iter=1000)),
+                ]
+            )
+            
+            clf.fit(X_train, y_train)
+            
+            y_pred = clf.predict(X_test)
+            acc = accuracy_score(y_test, y_pred)
+            print(f"Test accuracy: {acc:.3f}")
+            mlflow.log_metric("accuracy", acc)
+            # return str(acc)
+            
+            example = pd.DataFrame(
+                [
+                    {
+                        "sex": "female",
+                        "pclass": 1,
+                        "embarked": "S",
+                        "alone": 0,   # 0 = not alone, 1 = alone
+                    }
+                ]
+            )
+            onnx_model = to_onnx(clf, X_train[:1])
+
+            mlflow.onnx.log_model(
+                onnx_model=onnx_model,
+                name="model",
+                registered_model_name=MODEL_NAME,
+            )
+            print("Logged ONNX model to MLflow and registered under:", MODEL_NAME)
+            return onnx_model, acc

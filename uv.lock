@@ -1027,7 +1027,9 @@ backend = [
     { name = "mlflow" },
     { name = "onnxruntime" },
     { name = "python-dotenv" },
+    { name = "scikit-learn" },
     { name = "seaborn" },
+    { name = "skl2onnx" },
     { name = "uvicorn" },
 ]
 dev = [
@@ -1038,6 +1040,7 @@ dev = [
     { name = "onnxruntime" },
     { name = "pytest" },
     { name = "python-dotenv" },
+    { name = "scikit-learn" },
     { name = "seaborn" },
     { name = "skl2onnx" },
     { name = "streamlit" },
@@ -1050,9 +1053,6 @@ test = [
     { name = "httpx" },
     { name = "pytest" },
 ]
-train-ml = [
-    { name = "skl2onnx" },
-]
 
 [package.metadata]
 
@@ -1063,7 +1063,9 @@ backend = [
     { name = "mlflow", specifier = ">=3.6.0" },
     { name = "onnxruntime", specifier = ">=1.23.2" },
     { name = "python-dotenv", specifier = ">=1.2.1" },
+    { name = "scikit-learn", specifier = ">=1.7.2" },
     { name = "seaborn", specifier = ">=0.13.2" },
+    { name = "skl2onnx", specifier = ">=1.19.1" },
     { name = "uvicorn", specifier = ">=0.38.0" },
 ]
 dev = [
@@ -1074,6 +1076,7 @@ dev = [
     { name = "onnxruntime", specifier = ">=1.23.2" },
     { name = "pytest", specifier = ">=9.0.1" },
     { name = "python-dotenv", specifier = ">=1.2.1" },
+    { name = "scikit-learn", specifier = ">=1.7.2" },
     { name = "seaborn", specifier = ">=0.13.2" },
     { name = "skl2onnx", specifier = ">=1.19.1" },
     { name = "streamlit", specifier = ">=1.51.0" },
@@ -1084,7 +1087,6 @@ test = [
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "pytest", specifier = ">=9.0.1" },
 ]
-train-ml = [{ name = "skl2onnx", specifier = ">=1.19.1" }]
 
 [[package]]
 name = "mpmath"

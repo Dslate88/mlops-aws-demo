@@ -10,10 +10,6 @@ dev = [
     {include-group = "backend"},
     {include-group = "frontend"},
     {include-group = "test"},
-    {include-group = "train_ml"}
-]
-train_ml = [
-    "skl2onnx>=1.19.1", # NOTE: use to train onnx objects later
 ]
 backend = [
     "baml-py>=0.213.0",
@@ -21,7 +17,9 @@ backend = [
     "mlflow>=3.6.0",
     "onnxruntime>=1.23.2",
     "python-dotenv>=1.2.1",
+    "scikit-learn>=1.7.2",
     "seaborn>=0.13.2",
+    "skl2onnx>=1.19.1",
     "uvicorn>=0.38.0",
 ]
 frontend = [

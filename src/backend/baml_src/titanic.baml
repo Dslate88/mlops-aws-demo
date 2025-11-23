@@ -14,7 +14,8 @@ class TitanicInput {
 function TitanicValidateInput(user_message: string) -> TitanicInput {
   client "DEFAULT"
   prompt #"
-    Given user message extract the relevant info.
+    Given user message extract the relevant fields.
+    Users may not provide any relevant fields, if that is the case, be sure to return all the fields in the missing_fields list.
 
     {{ ctx.output_format }}
 
@@ -65,7 +66,7 @@ test InputMissing {
   functions [TitanicValidateInput]
   args {
     user_message #"
-        I'm a male in second class and i embarked out of canada
+      Test the currently active model
     "#
   }
 }

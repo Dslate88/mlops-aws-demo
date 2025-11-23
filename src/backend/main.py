@@ -16,7 +16,7 @@ from .baml_client.types import (
     NonApprovedRequest,
     ModelInferenceAPI,
     ModelTrainAPI,
-    ModelRemoveAPI
+    ModelRemoveAPI,
 )
 from .models.registry import ModelRegistry
 from .models.factory import ModelFactory
@@ -39,6 +39,7 @@ app = FastAPI(title="ML_LLM Ops Demo - Backend APIs", version="0.0.1")
 
 lock = Lock()
 
+
 class ChatRequest(BaseModel):
     prompt: str
 
@@ -47,7 +48,13 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     content: str
     kind: Literal[
-        "list_models", "remove_model", "elevate", "missing_inputs", "train", "inference", "error"
+        "list_models",
+        "remove_model",
+        "elevate",
+        "missing_inputs",
+        "train",
+        "inference",
+        "error",
     ]
     error: bool = False
     metadata: Optional[dict] = None
@@ -87,6 +94,7 @@ def active_model():
         name=active_model,
         version=version,
     )
+
 
 @app.post("/chat")
 def chat(request: ChatRequest):

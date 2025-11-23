@@ -28,6 +28,7 @@ MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "http://127.0.0.1:5000/")
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 mlflow.set_experiment("Default")
 
+
 class TitanicModelService(BaseModelService):
     val_inference = b.TitanicValidateInput
     val_train = b.TitanicValidateTrain
@@ -89,45 +90,49 @@ class TitanicModelService(BaseModelService):
     def train(self, inp: TitanicTrain):
         with mlflow.start_run(run_name="titanic-logreg-onnx") as run:
             titanic = sns.load_dataset("titanic")
-            
+
             y = titanic["survived"]
             X = titanic[["sex", "pclass", "embarked", "alone"]].copy()
-            
+
             mask = X.notna().all(axis=1) & y.notna()
             X = X[mask]
             y = y[mask]
-            
+
             X["pclass"] = X["pclass"].astype("category")
             X["alone"] = X["alone"].astype("int64")
-            
+
             X_train, X_test, y_train, y_test = train_test_split(
                 X, y, test_size=inp.test_size, random_state=42, stratify=y
             )
-            
+
             categorical_features = ["sex", "pclass", "embarked", "alone"]
-            
+
             preprocess = ColumnTransformer(
                 transformers=[
-                    ("cat", OneHotEncoder(handle_unknown="ignore"), categorical_features),
+                    (
+                        "cat",
+                        OneHotEncoder(handle_unknown="ignore"),
+                        categorical_features,
+                    ),
                 ]
             )
-            
+
             clf = Pipeline(
                 steps=[
                     ("preprocess", preprocess),
                     ("model", LogisticRegression(max_iter=1000)),
                 ]
             )
-            
+
             clf.fit(X_train, y_train)
-            
+
             y_pred = clf.predict(X_test)
             acc = accuracy_score(y_test, y_pred)
             mlflow.log_metric("accuracy", acc)
             mlflow.log_metric("x_train_size", len(X_train))
             mlflow.log_metric("x_test_size", len(X_test))
             mlflow.log_param("test_size", inp.test_size)
-            
+
             example = pd.DataFrame(
                 [
                     {
@@ -147,11 +152,11 @@ class TitanicModelService(BaseModelService):
             )
 
             return {
-                    "accuracy": round(acc, 3),
-                    "test_size": inp.test_size,
-                    "x_train_rows": len(X_train),
-                    "x_test_rows": len(X_test),
-                    "model_name": self.model_name,
-                    "run_id": run.info.run_id,
-                    "experiment_id": run.info.experiment_id
-                    }
+                "accuracy": round(acc, 3),
+                "test_size": inp.test_size,
+                "x_train_rows": len(X_train),
+                "x_test_rows": len(X_test),
+                "model_name": self.model_name,
+                "run_id": run.info.run_id,
+                "experiment_id": run.info.experiment_id,
+            }

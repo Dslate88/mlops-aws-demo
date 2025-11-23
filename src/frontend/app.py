@@ -3,47 +3,53 @@ import requests
 
 import streamlit as st
 
-st.title("mlops-demo-chat")
+APP_TAGLINE = (
+    "llm intent router + fastapi modlel hosting + streamlit + mlflow + aws + some mlops"
+)
 
-# TODO: have a header/banner showing the active prod model + version?
+APP_RULES_MD = """
+### How this demo works
 
-## TODO: ensure users know that history is displayed, but only last message is submitted each time.
-## TODO: create .env/config pattern
-# TODO: add info that informs users of 'rules' of the app. ex: only 1 prod model at a time.
+- **One production model at a time**  
+  The backend enforces that only a single model can be in the `Production` stage.  
+  Elevating one model will archive any other production models.
+  This is done strictly for interactive demo purposes.
+
+- **Prompt examples**  
+  The buttons in the sidebar just pre-fill example prompts.  
+  It's **recommended** to type your own natural language instructions and experiment.
+
+- **Chat history vs. what gets sent**  
+  The full history is displayed for context, but on each turn only your **latest message**
+  is sent to the backend.
+
+- **Typical flow**  
+  1. Ask: `What models are available?`  
+  2. Optionally: `Train titanic model with test size 0.3`  
+  3. Elevate: `Elevate titanic to production`  
+  4. Then: `I want to test the model in production: I'm a male who had a 2nd class ticket and I departed out of england with my family.`, or something like that..
+
+- **Diclaimer**  
+  The focus is to showcase a variety of skillsets, not production-grade reliability.
+  For example, a simple thread locking solution was implemented to avoid race conditions...would need refactoring if this were to scale.
+"""
+
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
 
-# session_state initialize
+
+st.set_page_config(page_title="mlops-demo-chat", layout="wide")
+st.title("mlops-demo-chat")
+
+
+# session state
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
 if "help_prompt" not in st.session_state:
     st.session_state.help_prompt = None
 
-# helper prompt buttons
-col1, col2, col3, col4, col5 = st.columns(5)
-if col1.button("List models"):
-    st.session_state.help_prompt = "What models are available?"
-if col2.button("Remove model"):
-    st.session_state.help_prompt = "Remove titanic model"
-if col3.button("Elevate model"):
-    st.session_state.help_prompt = "Elevate titanic to production."
-if col4.button("Train model"):
-    st.session_state.help_prompt = "Train titanic model with test size of .3"
-if col5.button("Test Model"):
-    st.session_state.help_prompt = "Test model"
 
-# display messages upon rerun
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
-
-# handle user_input
-# note: two needed because streamlit rerun design...doesnt have VDOM like react...
-user_input = st.chat_input("Type something")
-prompt = st.session_state.help_prompt or user_input
-st.session_state.help_prompt = None
-
-
+# helpers
 def render_active_model_banner():
     try:
         resp = requests.get(f"{BACKEND_URL}/active-model", timeout=10)
@@ -57,7 +63,7 @@ def render_active_model_banner():
 
     if active_model:
         st.success(
-            f"Active production model: `{data.get('name')}` version: `{active_version}`"
+            f"Active production model: `{active_model}` (version `{active_version}`)"
         )
     else:
         st.info(
@@ -66,10 +72,6 @@ def render_active_model_banner():
         st.info(data)
 
 
-render_active_model_banner()
-
-
-# special handlers based on ChatResponse.kind
 def handle_list_models(resp, is_error):
     if not is_error:
         st.caption("Tip: try `Elevate <model_name> to production` next.")
@@ -77,7 +79,7 @@ def handle_list_models(resp, is_error):
 
 def handle_elevate(resp, is_error):
     if not is_error:
-        st.caption("Tip: You can now test model by saying `I want to test the model`.")
+        st.caption("Tip: only one model can be in Production at a time. ")
 
 
 def handle_missing_inputs(resp, is_error):
@@ -97,12 +99,11 @@ def handle_inference(resp, is_error):
 
 
 def handle_train(resp, is_error):
-    # TODO: add more later
-    st.caption(f"Tip: try to test this model now!, or elevate")
+    st.caption("Tip: try testing this model now, or elevating it to Production.")
     meta = resp.get("metadata", {})
     results = meta.get("train_results")
     if results is not None:
-        with st.expander("train metadata", expanded=False):
+        with st.expander("Train metadata", expanded=False):
             for field, values in results.items():
                 st.write(f"**{field}**: `{str(values)}`")
 
@@ -116,31 +117,86 @@ KIND_HANDLERS = {
 }
 
 
-# TODO: display proba instead...
-if prompt:
-    with st.chat_message("user"):
-        st.markdown(prompt)
+# pages
+def render_demo_guide_page():
+    st.caption(APP_TAGLINE)
+    st.markdown(APP_RULES_MD)
+
+
+def render_chat_page():
+    with st.sidebar:
+        st.subheader("Prefill prompts")
+
+        if st.button("List models"):
+            st.session_state.help_prompt = "What models are available?"
+
+        if st.button("Remove model"):
+            st.session_state.help_prompt = "Remove titanic model"
+
+        if st.button("Elevate model"):
+            st.session_state.help_prompt = "Elevate titanic to production."
+
+        if st.button("Train model"):
+            st.session_state.help_prompt = "Train titanic model with test size of .3"
+
+        if st.button("Test titanic model"):
+            resp = requests.get(f"{BACKEND_URL}/active-model", timeout=10).json()
+            active_model_name = resp.get("name")
+
+            if active_model_name != "titanic":
+                st.warning(
+                    "The `titanic` model is not currently in Production. "
+                    "You may need to train and or elevate it first."
+                )
+            else:
+                st.session_state.help_prompt = (
+                    "I want to test the model in production: I'm a male who had a 2nd class ticket "
+                    "and I departed out of england with my family."
+                )
+
+    render_active_model_banner()
+
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
+    user_input = st.chat_input("Type something")
+    prompt = st.session_state.help_prompt or user_input
+    st.session_state.help_prompt = None
+
+    if prompt:
+        with st.chat_message("user"):
+            st.markdown(prompt)
         st.session_state.messages.append({"role": "user", "content": prompt})
 
-    with st.chat_message("assistant"):
-        # hit baml layer for intent routing
-        payload = {"prompt": prompt}
-        resp = requests.post(f"{BACKEND_URL}/chat", json=payload).json()
+        with st.chat_message("assistant"):
+            payload = {"prompt": prompt}
+            resp = requests.post(f"{BACKEND_URL}/chat", json=payload).json()
 
-        # parse response
-        content = resp.get("content")
-        kind = resp.get("kind")
-        is_error = resp.get("error")
+            content = resp.get("content")
+            kind = resp.get("kind")
+            is_error = resp.get("error")
 
-        # conditionally display content
-        if is_error:
-            st.error(resp.get("content"))
-        else:
-            st.markdown(resp.get("content"))
+            if is_error:
+                st.error(content)
+            else:
+                st.markdown(content)
 
-        # handle extras associated with ChatResponse.kind
-        handler = KIND_HANDLERS.get(kind)
-        if handler:
-            handler(resp, is_error)
+            handler = KIND_HANDLERS.get(kind)
+            if handler:
+                handler(resp, is_error)
 
         st.session_state.messages.append({"role": "assistant", "content": content})
+
+
+# main
+with st.sidebar:
+    st.title("Navigation")
+    page = st.radio("Go to", ["Chat", "Demo guide"])
+    st.markdown("---")
+    st.markdown("https://github.com/Dslate88/mlops-aws-demo")
+
+if page == "Demo guide":
+    render_demo_guide_page()
+else:
+    render_chat_page()

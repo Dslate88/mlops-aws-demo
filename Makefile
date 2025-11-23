@@ -19,12 +19,6 @@ FRONTEND_IMAGE = $(FRONTEND_REPO):$(TAG)
 FRONTEND_ECR_IMAGE = $(IMAGE_PREFIX)/$(FRONTEND_REPO):$(TAG)
 FRONTEND_ECR_IMAGE_LATEST = $(IMAGE_PREFIX)/$(FRONTEND_REPO):$(LATEST_TAG)
 
-# mlflow
-MLFLOW_REPO = mlops-demo-mlflow
-MLFLOW_IMAGE = $(MLFLOW_REPO):$(TAG)
-MLFLOW_ECR_IMAGE = $(IMAGE_PREFIX)/$(MLFLOW_REPO):$(TAG)
-MLFLOW_ECR_IMAGE_LATEST = $(IMAGE_PREFIX)/$(MLFLOW_REPO):$(LATEST_TAG)
-
 backend:
 	uvicorn src.backend.main:app --reload
 
@@ -76,21 +70,9 @@ docker-push-frontend: ecr-auth docker-tag-frontend
 	docker push $(FRONTEND_ECR_IMAGE)
 	docker push $(FRONTEND_ECR_IMAGE_LATEST)
 
-# mlflow
-docker-build-mlflow:
-	docker build --platform=linux/amd64 -f Dockerfile.mlflow -t $(MLFLOW_IMAGE) .
-
-docker-tag-mlflow: docker-build-mlflow
-	docker tag $(MLFLOW_IMAGE) $(MLFLOW_ECR_IMAGE)
-	docker tag $(MLFLOW_IMAGE) $(MLFLOW_ECR_IMAGE_LATEST)
-
-docker-push-mlflow: ecr-auth docker-tag-mlflow
-	docker push $(MLFLOW_ECR_IMAGE)
-	docker push $(MLFLOW_ECR_IMAGE_LATEST)
-
 # all
-docker-build-all: docker-build-backend docker-build-frontend docker-build-mlflow
+docker-build-all: docker-build-backend docker-build-frontend
 
-docker-tag-all: docker-tag-backend docker-tag-frontend docker-tag-mlflow
+docker-tag-all: docker-tag-backend docker-tag-frontend
 
-docker-push-all: docker-push-backend docker-push-frontend docker-push-mlflow
+docker-push-all: docker-push-backend docker-push-frontend

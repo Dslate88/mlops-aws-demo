@@ -12,7 +12,7 @@ class TitanicInput {
 }
 
 function TitanicValidateInput(user_message: string) -> TitanicInput {
-  client "openai/gpt-5-mini"
+  client "DEFAULT"
   prompt #"
     Given user message extract the relevant info.
 

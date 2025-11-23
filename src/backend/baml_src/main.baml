@@ -1,5 +1,5 @@
 function SelectTool(user_message: string) -> ModelRegistryAPI | NonApprovedRequest | ModelStageAPI | ModelInferenceAPI {
-  client "openai/gpt-5-mini"
+  client "DEFAULT"
   prompt #"
     You are a router. Decide which intent fits best and populate the fields.
 

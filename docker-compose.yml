@@ -8,15 +8,13 @@ services:
     container_name: mlops-backend
     environment:
       - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - AWS_BEARER_TOKEN_BEDROCK=${AWS_BEARER_TOKEN_BEDROCK}
     ports:
-      - "8001:8000"
+      - "8000:8000"
     depends_on:
       - mlflow
 
   mlflow:
-    # https://github.com/mlflow/mlflow/issues/16659
-    # image: ghcr.io/mlflow/mlflow:latest
-    # TODO: decide on keeping allowed-hosts pattern...or restricht
     image: ghcr.io/mlflow/mlflow:v3.6.0
     container_name: mlops-mlflow
     command: >
@@ -26,9 +24,9 @@ services:
       --host 0.0.0.0
       --port 5000
       --allowed-hosts "mlflow:5000,localhost:5001,127.0.0.1:5001"
-    volumes:
-      - ./mlruns:/mlruns
-      - ./mlflow.db:/mlflow.db
+    # volumes:
+    #   - ./mlruns:/mlruns
+    #   - ./mlflow.db:/mlflow.db
     ports:
       - "5001:5000"
 
@@ -40,6 +38,6 @@ services:
     environment:
       - BACKEND_URL=http://backend:8000/chat
     ports:
-      - "8502:8501"
+      - "8501:8501"
     depends_on:
       - backend

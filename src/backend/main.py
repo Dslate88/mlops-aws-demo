@@ -67,6 +67,9 @@ def render_markdown(models):
 def home():
     return {"message": "Hello!"}
 
+@app.get("/health")
+def home():
+    return {"status": "healthy"}
 
 @app.post("/chat")
 def chat(request: ChatRequest):

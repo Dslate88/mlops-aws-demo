@@ -9,3 +9,14 @@ src/backend/baml_client/**
 mlflow.db
 mlruns/
 mlartifacts/
+
+## terraform
+.terraform/
+**.terraform.lock**
+*.tfstate
+*.tfstate.*
+*.tfvars
+
+# # Local automation files
+# .terraform.lock.hcl
+# .terraform-version

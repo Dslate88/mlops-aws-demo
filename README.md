@@ -1,5 +1,7 @@
 # mlops-aws-demo
 
+Still actively developing, plan to continue working on this the next few weeks.
+
 My goal here is twofold:
 1) demonstrate a variety of skillsets, not create a 100% practical application
 2) have a repo I can continue to experiment with new patterns/architectures, etc (see section 7 below for example)
@@ -19,6 +21,10 @@ What this demo delivers:
 Things I plan to add (list will grow)
 - explore auto-updating docs via llm pattern [aws-blog-topic](https://aws.amazon.com/blogs/opensource/introducing-strands-agent-sops-natural-language-workflows-for-ai-agents/)
 - replace [baml](https://github.com/BoundaryML/baml) with [pydantic-ai](https://ai.pydantic.dev/)
+- make user interaction pattern more natural with pydantic-ai patterns
+- build structlog pattern
+- build/automate ml monitoring patterns
+- potentially carve out training into microservice and actually train/tune large models
 
 
 > see [Issue #3: mlops-aws-demo development summary](https://github.com/Dslate88/mlops-aws-demo/issues/3).
@@ -56,14 +62,24 @@ If I were thinking production:
 - I wouldnt be hosting my own MLflow on a container, preference a hosted service like Sagemaker or Databricks.
 - would need enterprise level logging of applicaiton activity
 - would configure CICD GHA patterns that auto-deploy feature branches to the cloud for testing (related to prior terraform module details)
+- leverage terraform module work to create CICD patterns for dev/qa/prod deployments, potentially based on release hooks if needed
 - Despite public/private subnet architecture enforcing 443 port, thats not enough for enterprise as you want to lock down ingress from company CIDR blocks
     - Related, a user authentication mechanism to ensure you are a valid enterprise member (i.e. Azure AD) in the public layer prior to private layer redirect.
 - More security, image scanning for vulnerabilites, etc.
 - tests
   
+## dev notes (aka document later)
+- pipx usage
+- pipx install uv
+- pipx install ruff
+- source .venv/bin/activate
+- short-term key bedrock
+- makefile
+- compose + containers
+
 ---
 
-Everything below was ai-generated. I have a keymap that I push that consumes all my active files and injects a goal, for instance: "generate an outline of topics to cover in my README.md"
+### Everything below was ai-generated. I have a keymap that I push that consumes all my active files and injects a goal, for instance: "generate an outline of topics to cover in my README.md"
 
 ## 3. Core components 
 
@@ -165,4 +181,3 @@ The UI interprets `ChatResponse.kind` to render helpful tips or metadata:
 - Show valid values when inputs are missing.
 - Show training metrics when a training run completes.
 - Show raw prediction metadata for inference responses.
-

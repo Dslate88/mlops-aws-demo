@@ -1,6 +1,7 @@
 locals {
   stack_name = "mlops-demo"
   env        = "dev"
+  quick_deploy = false
 
   # vpc
   vpc_name             = "${local.env}-${local.stack_name}"
@@ -18,7 +19,7 @@ locals {
   priv_nat_gateway = true
 
   # ecr
-  ecr_containers = ["${local.stack_name}-frontend", "${local.stack_name}-backend", "${local.stack_name}-mlflow"]
+  ecr_containers = ["${local.stack_name}-frontend", "${local.stack_name}-backend"]
 
   # r53
   domain_name = "devinslate.com"

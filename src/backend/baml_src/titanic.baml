@@ -5,9 +5,13 @@ class TitanicInput {
   sex SexTypes?
   pclass ClassTypes?
   embarked EmbarkTypes?
-  alone AloneTypes?
+  age_group AgeGroupTypes?
   missing_details string[]? @description(#"
     This lists which, if any, of the fields the user did not provide.
+  "#)
+  reasoning string @description(#"
+    relevant information from the user message related to what the fields might be.
+    try to reasonable guess what the values should be where possible.
   "#)
 }
 
@@ -75,7 +79,7 @@ test InputComplete {
   functions [TitanicValidateInput]
   args {
     user_message #"
-        I'm a male in second class and i embarked out of england alone
+     I want to test the model in production. I feel like I have to do a lot of chores around the house and everyone plays with my toys without me asking. ma and pa say that we have fancy tickets to this ship but they have all sorts of fancy stuff in our homes back in france where we live. Anyways, I hope to get that new set of GI joes for christmas this year.
     "#
   }
 }
@@ -97,7 +101,7 @@ enum EmbarkTypes {
     IRELAND
 }
 
-enum AloneTypes {
-    TRUE
-    FALSE
+enum AgeGroupTypes {
+    ADULT
+    CHILD
 }

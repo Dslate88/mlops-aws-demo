@@ -51,9 +51,9 @@ class TitanicModelService(BaseModelService):
                 "FRANCE": "C",
                 "IRELAND": "Q",
             },
-            "AloneTypes": {
-                "TRUE": 1,
-                "FALSE": 0,
+            "AgeGroupType": {
+                "CHILD": 1,
+                "ADULT": 0,
             },
         }
 
@@ -61,13 +61,13 @@ class TitanicModelService(BaseModelService):
         sex_val = self.map["SexTypes"][inp.sex.name]
         pclass_val = self.map["ClassTypes"][inp.pclass.name]
         embarked_val = self.map["EmbarkTypes"][inp.embarked.name]
-        alone_val = self.map["AloneTypes"][inp.alone.name]
+        age_group_val = self.map["AgeGroupType"][inp.age_group]
 
         features = {
             "sex": sex_val,
             "pclass": pclass_val,
             "embarked": embarked_val,
-            "alone": alone_val,
+            "age_group": age_group_val,
         }
         return features
 
@@ -79,33 +79,34 @@ class TitanicModelService(BaseModelService):
             "sex": np.array([[features["sex"]]], dtype=object),
             "pclass": np.array([[features["pclass"]]], dtype=np.int64),
             "embarked": np.array([[features["embarked"]]], dtype=object),
-            "alone": np.array([[features["alone"]]], dtype=np.int64),
+            "age_group": np.array([[features["age_group"]]], dtype=np.int64),
         }
 
     def format_response(self, raw_pred):
-        pred = raw_pred["prediction"]
-        label = "didnt make it" if pred == 0 else "survived"
-        return f"you probably {label}"
+        pred = raw_pred["prediction"][0][1]
+        label = "didnt make it" if round(pred, 0) == 0 else "survived"
+        return f"{round(pred, 2)} probability you {label}"
 
     def train(self, inp: TitanicTrain):
         with mlflow.start_run(run_name="titanic-logreg-onnx") as run:
             titanic = sns.load_dataset("titanic")
+            titanic["age_group"] = titanic["age"].apply(lambda x: "CHILD" if x <= 18 else "ADULT")
 
             y = titanic["survived"]
-            X = titanic[["sex", "pclass", "embarked", "alone"]].copy()
+            X = titanic[["sex", "pclass", "embarked", "age_group"]].copy()
 
             mask = X.notna().all(axis=1) & y.notna()
             X = X[mask]
             y = y[mask]
 
             X["pclass"] = X["pclass"].astype("category")
-            X["alone"] = X["alone"].astype("int64")
+            X["age_group"] = X["age_group"].map({"ADULT": 0, "CHILD": 1})
 
             X_train, X_test, y_train, y_test = train_test_split(
                 X, y, test_size=inp.test_size, random_state=42, stratify=y
             )
 
-            categorical_features = ["sex", "pclass", "embarked", "alone"]
+            categorical_features = ["sex", "pclass", "embarked", "age_group"]
 
             preprocess = ColumnTransformer(
                 transformers=[
@@ -139,7 +140,7 @@ class TitanicModelService(BaseModelService):
                         "sex": "female",
                         "pclass": 1,
                         "embarked": "S",
-                        "alone": 0,
+                        "age_group": 1,
                     }
                 ]
             )

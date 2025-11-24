@@ -4,7 +4,6 @@ import onnxruntime as rt
 import mlflow
 
 
-# TODO: check session thread once deployed..
 class BaseModelService(ABC):
     model_name: str
 
@@ -22,9 +21,8 @@ class BaseModelService(ABC):
         feed = self.build_feed(features)
         sess = self.get_session()
         output = sess.run(None, feed)
-        pred = int(output[0].item())
-
-        return {"prediction": pred}
+        proba = output[1]
+        return {"prediction": proba}
 
     # TODO: bugfix needed...
     def missing_response(self, names):

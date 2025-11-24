@@ -116,7 +116,7 @@ def chat(request: ChatRequest):
         with lock:
             mr.remove_model(resp.model_name)
             return ChatResponse(
-                content="sucessfully removed {resp.model_name} from MLFlow Registry.",
+                content=f"sucessfully removed {resp.model_name} from MLFlow Registry.",
                 kind="remove_model",
             )
 
@@ -187,13 +187,14 @@ def chat(request: ChatRequest):
                     kind="missing_inputs",
                     metadata={
                         "valid_values": svc.valid_values(),
+                        "reasoning": val.reasoning,
                     },
                 )
 
             features = svc.transform(val)
             raw_pred = svc.predict(
                 features
-            )  # TODO: change to preds with array of pred/proba?
+            )
             content = svc.format_response(raw_pred)
 
             return ChatResponse(
@@ -202,6 +203,8 @@ def chat(request: ChatRequest):
                 metadata={
                     "raw_prediction": raw_pred,
                     "model_name": svc.model_name,
+                    "raw_features": val,
+                    "transformed_features": features,
                 },
             )
 

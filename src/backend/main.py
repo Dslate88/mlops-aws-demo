@@ -187,6 +187,7 @@ def chat(request: ChatRequest):
                     kind="missing_inputs",
                     metadata={
                         "valid_values": svc.valid_values(),
+                        "reasoning": val.reasoning,
                     },
                 )
 

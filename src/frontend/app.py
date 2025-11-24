@@ -4,7 +4,7 @@ import requests
 import streamlit as st
 
 APP_TAGLINE = (
-    "llm intent router + fastapi modlel hosting + streamlit + mlflow + aws + some mlops"
+    "llm intent router + llm supervised ml inference + fastapi modlel hosting + streamlit + mlflow + aws + some mlops"
 )
 
 APP_RULES_MD = """
@@ -84,7 +84,13 @@ def handle_elevate(resp, is_error):
 
 # TODO: add reasoning to inform why it couldnt validate
 def handle_missing_inputs(resp, is_error):
-    valid_values = resp.get("metadata", {}).get("valid_values", {})
+    meta = resp.get("metadata", {})
+    valid_values = meta.get("valid_values", {})
+    reasoning = meta.get("reasoning")
+
+    if reasoning:
+        st.caption(reasoning)
+
     if valid_values:
         with st.expander("Valid values", expanded=False):
             for field, values in valid_values.items():
@@ -169,8 +175,10 @@ def render_chat_page():
                 )
             else:
                 st.session_state.help_prompt = (
-                    "I want to test the model in production: I'm a 33 year old male who had a 2nd class ticket "
-                    "and I departed out of england."
+                    "I want to test the model in production. I feel like I have to do a lot of chores around the house"
+                    "and everyone plays with my toys without me asking. ma and pa say that we have fancy tickets to this"
+                    "ship but they have all sorts of fancy stuff in our homes back in france where we live."
+                    "Anyways, I hope to get that new set of GI joes for christmas this year."
                 )
 
     render_active_model_banner()

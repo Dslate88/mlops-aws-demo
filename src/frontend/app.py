@@ -76,10 +76,10 @@ def handle_list_models(resp, is_error):
     if not is_error:
         st.caption("Tip: try `Elevate <model_name> to production` next.")
 
-
 def handle_elevate(resp, is_error):
     if not is_error:
         st.caption("Tip: only one model can be in Production at a time. ")
+        st.rerun()
 
 
 # TODO: add reasoning to inform why it couldnt validate
@@ -116,6 +116,9 @@ def handle_inference(resp, is_error):
 
 def handle_train(resp, is_error):
     st.caption("Tip: try testing this model now, or elevating it to Production.")
+    if not is_error:
+        st.rerun()
+
     meta = resp.get("metadata", {})
     results = meta.get("train_results")
     if results is not None:

@@ -28,10 +28,7 @@ Still actively developing, plan to continue working on this the next few weeks.
 - simple cicd pattern, and explicit tag id to invoke redeploys
 
 ## My custom neovim IDE:
-quick video showing my config, been iterating on this for 4 years, helps me crank more out and enjoy doing it. 
-https://github.com/user-attachments/assets/f3e80bb0-c00c-40bd-a86d-58cbd8c6f344
-
-
+- add quick video showing my config, been iterating on this for 4 years...
 
 > see [Issue #3: mlops-aws-demo development summary](https://github.com/Dslate88/mlops-aws-demo/issues/3).
 

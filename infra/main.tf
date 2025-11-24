@@ -1,6 +1,7 @@
 locals {
   stack_name = "mlops-demo"
   env        = "dev"
+  quick_deploy = false
 
   # vpc
   vpc_name             = "${local.env}-${local.stack_name}"

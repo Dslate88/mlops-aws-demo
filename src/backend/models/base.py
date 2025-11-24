@@ -4,7 +4,6 @@ import onnxruntime as rt
 import mlflow
 
 
-# TODO: check session thread once deployed..
 class BaseModelService(ABC):
     model_name: str
 

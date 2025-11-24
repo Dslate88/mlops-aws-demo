@@ -9,6 +9,9 @@ class TitanicInput {
   missing_details string[]? @description(#"
     This lists which, if any, of the fields the user did not provide.
   "#)
+  reasoning string @description(#"
+    relevant information from the user message related to what the fields might be.
+  "#)
 }
 
 function TitanicValidateInput(user_message: string) -> TitanicInput {
@@ -75,7 +78,7 @@ test InputComplete {
   functions [TitanicValidateInput]
   args {
     user_message #"
-     I'm a male who had a 2nd class ticket and I departed out of england. I am 33 years old
+     I'm a male age 5 who had a 2nd class ticket and I departed out of england.
     "#
   }
 }

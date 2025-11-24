@@ -202,6 +202,8 @@ def chat(request: ChatRequest):
                 metadata={
                     "raw_prediction": raw_pred,
                     "model_name": svc.model_name,
+                    "raw_features": val,
+                    "transformed_features": features,
                 },
             )
 

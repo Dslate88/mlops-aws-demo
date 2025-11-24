@@ -2,23 +2,23 @@
 
 Still actively developing, plan to continue working on this the next few weeks.
 
-My goal here is twofold:
+## My goal here is twofold:
 1) demonstrate a variety of skillsets, not create a 100% practical application
 2) have a repo I can continue to experiment with new patterns/architectures, etc (see section 7 below for example)
 
-My perspective on LLM's:
+## My perspective on LLM's:
 - allow it to help reason, but rarely code for you.
     - for example, I had AI generate an outline for this README.md that I then wrote myself, it refactored my streamlit logic, and reasoned over multiple design patterns along the way. 
 - find ways to bulid LLM's into process for automations/productivity, example [aws-strands-sops](https://aws.amazon.com/blogs/opensource/introducing-strands-agent-sops-natural-language-workflows-for-ai-agents/)
 
-What this demo delivers:
+## What this demo delivers:
 - LLM intent routing: 
 - FastAPI backend
 - MLflow model registry + [ONNX](https://onnx.ai/) (wanted to experiment with it)
 - Streamlit chat UI 
 - AWS ECS/Fargate deployment (secure enough to be considered overkill for this demo, my preference..)
 
-Things I plan to add (list will grow)
+## Things I plan to add (list will grow)
 - explore auto-updating docs via llm pattern [aws-blog-topic](https://aws.amazon.com/blogs/opensource/introducing-strands-agent-sops-natural-language-workflows-for-ai-agents/)
 - replace [baml](https://github.com/BoundaryML/baml) with [pydantic-ai](https://ai.pydantic.dev/)
 - make user interaction pattern more natural with pydantic-ai patterns

@@ -26,6 +26,12 @@ Things I plan to add (list will grow)
 - build/automate ml monitoring patterns
 - potentially carve out training into microservice and actually train/tune large models
 
+My custom neovim IDE:
+
+
+https://github.com/user-attachments/assets/f3e80bb0-c00c-40bd-a86d-58cbd8c6f344
+
+
 
 > see [Issue #3: mlops-aws-demo development summary](https://github.com/Dslate88/mlops-aws-demo/issues/3).
 

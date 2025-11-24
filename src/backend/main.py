@@ -193,7 +193,7 @@ def chat(request: ChatRequest):
             features = svc.transform(val)
             raw_pred = svc.predict(
                 features
-            )  # TODO: change to preds with array of pred/proba?
+            )
             content = svc.format_response(raw_pred)
 
             return ChatResponse(

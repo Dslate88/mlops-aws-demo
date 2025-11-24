@@ -25,10 +25,10 @@ Still actively developing, plan to continue working on this the next few weeks.
 - build structlog pattern
 - build/automate ml monitoring patterns
 - potentially carve out training into microservice and actually train/tune large models
+- simple cicd pattern, and explicit tag id to invoke redeploys
 
-My custom neovim IDE:
-
-
+## My custom neovim IDE:
+quick video showing my config, been iterating on this for 4 years, helps me crank more out and enjoy doing it. 
 https://github.com/user-attachments/assets/f3e80bb0-c00c-40bd-a86d-58cbd8c6f344
 
 

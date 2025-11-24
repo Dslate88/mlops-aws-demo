@@ -14,7 +14,8 @@ class TitanicInput {
 function TitanicValidateInput(user_message: string) -> TitanicInput {
   client "DEFAULT"
   prompt #"
-    Given user message extract the relevant info.
+    Given user message extract the relevant fields.
+    Users may not provide any relevant fields, if that is the case, be sure to return all the fields in the missing_fields list.
 
     {{ ctx.output_format }}
 
@@ -27,8 +28,7 @@ class TitanicTrain {
   @@description(#"
     These are user selected config for training a machine learning model.
   "#)
-  // features "sex" | "pclass" | "embarktypes" | "alonetypes"
-  test_size float? //@assert(between_0_and_1, {{ this > 0.0 and this < 1.0 }})
+  test_size float?
 }
 
 function TitanicValidateTrain(user_message: string) -> TitanicTrain {
@@ -47,7 +47,16 @@ test TrainComplete {
   functions [TitanicValidateTrain]
   args {
     user_message #"
-      set test size to 5.2
+      train model titanic set test size to 5.2
+    "#
+  }
+}
+
+test TrainMissing {
+  functions [TitanicValidateTrain]
+  args {
+    user_message #"
+      train titanic model
     "#
   }
 }
@@ -57,7 +66,7 @@ test InputMissing {
   functions [TitanicValidateInput]
   args {
     user_message #"
-        I'm a male in second class and i embarked out of canada
+      Test the currently active model
     "#
   }
 }

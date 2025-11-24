@@ -57,6 +57,9 @@ class ModelRegistry:
                 return name
         return None
 
+    def remove_model(self, model_name):
+        self.client.delete_registered_model(model_name)
+
     def set_model_stage(self, model_name, operation):
         if model_name not in self:
             return f"No action taken. `{model_name}` is not a valid model."

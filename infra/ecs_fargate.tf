@@ -8,7 +8,7 @@ resource "aws_ecs_service" "app" {
   cluster         = aws_ecs_cluster.main.id
   task_definition = aws_ecs_task_definition.app.arn
   launch_type     = "FARGATE"
-  desired_count   = 1
+  desired_count = local.quick_deploy ? 1 : 0
 
   network_configuration {
     subnets          = aws_subnet.private[*].id
@@ -24,12 +24,6 @@ resource "aws_ecs_service" "app" {
 
   deployment_minimum_healthy_percent = 50
   deployment_maximum_percent         = 200
-
-  lifecycle {
-    ignore_changes = [
-      desired_count
-    ]
-  }
 }
 
 resource "aws_ecs_task_definition" "app" {

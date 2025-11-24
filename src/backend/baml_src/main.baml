@@ -1,5 +1,5 @@
 // TODO: add an enum for model_name or something..
-function SelectTool(user_message: string) -> ModelRegistryAPI | NonApprovedRequest | ModelStageAPI | ModelInferenceAPI | ModelTrainAPI {
+function SelectTool(user_message: string) -> ModelRegistryAPI | NonApprovedRequest | ModelStageAPI | ModelInferenceAPI | ModelTrainAPI | ModelRemoveAPI {
   client "DEFAULT"
   prompt #"
     You are a router. Decide which intent fits best and populate the fields.
@@ -15,6 +15,9 @@ function SelectTool(user_message: string) -> ModelRegistryAPI | NonApprovedReque
     - Use ModelInferenceAPI when the user wants to test/run/predict with the model:
       - "I want to test the model in production"
       - "Run a prediction with the production model"
+    - Use ModelRemoveAPI for deleting models for user input like:
+      - "Delete titanic model"
+      - "remove model insurance"
     - Use NonApprovedRequest for anything else.
 
     {{ ctx.output_format }}
@@ -49,7 +52,14 @@ class ModelTrainAPI {
   intent "model_train" @description(#"
     User wants to train a new model.
   "#)
-  model_name string
+  model_name string?
+}
+
+class ModelRemoveAPI {
+  intent "model_remove" @description(#"
+    User wants to remove a model from the registry.
+  "#)
+  model_name string?
 }
 
 class NonApprovedRequest {
@@ -58,7 +68,15 @@ class NonApprovedRequest {
   "#)
 }
 
-// TODO: add expected intents to tests...
+test ModelRemove {
+  functions [SelectTool]
+  args {
+    user_message #"
+      I want to remove model_name
+    "#
+  }
+}
+
 test ModelInference {
   functions [SelectTool]
   args {
@@ -99,7 +117,7 @@ test ModelTrain {
   functions [SelectTool]
   args {
     user_message #"
-      I want to train the titanic model
+      I want to train a model.
     "#
   }
 }

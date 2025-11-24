@@ -116,7 +116,7 @@ def chat(request: ChatRequest):
         with lock:
             mr.remove_model(resp.model_name)
             return ChatResponse(
-                content="sucessfully removed {resp.model_name} from MLFlow Registry.",
+                content=f"sucessfully removed {resp.model_name} from MLFlow Registry.",
                 kind="remove_model",
             )
 

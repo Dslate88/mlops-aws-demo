@@ -49,7 +49,7 @@ At a high level:
 
 Would recommend poking around in the codebase, but a few areas to poke around might be:
 - [ModelRegistry](https://github.com/Dslate88/mlops-aws-demo/blob/main/src/backend/models/registry.py) as a proxy for commonly seen business logic requirements
-- and [ModelFactory](https://github.com/Dslate88/mlops-aws-demo/blob/main/src/backend/models/factory.py) + [BaseModelService](https://github.com/Dslate88/mlops-aws-demo/blob/main/src/backend/models/factory.py) + [TitanicModelService](https://github.com/Dslate88/mlops-aws-demo/blob/main/src/backend/models/titanic.py) as a pattern for scaling ML/LLM systems. For instance, the [transform method](https://github.com/Dslate88/mlops-aws-demo/blob/ace562b735b6c568a192de04720ef6b99456bf55/src/backend/models/titanic.py#L59-L71) has a easy path to integrating with features stores. 
+- and [ModelFactory](https://github.com/Dslate88/mlops-aws-demo/blob/main/src/backend/models/factory.py) + [BaseModelService](https://github.com/Dslate88/mlops-aws-demo/blob/main/src/backend/models/base.py) + [TitanicModelService](https://github.com/Dslate88/mlops-aws-demo/blob/main/src/backend/models/titanic.py) as a pattern for scaling ML/LLM systems. For instance, the [transform method](https://github.com/Dslate88/mlops-aws-demo/blob/ace562b735b6c568a192de04720ef6b99456bf55/src/backend/models/titanic.py#L59-L71) has a easy path to integrating with features stores. 
 
 ## 2. AWS deployment
 My terraform in the [infra](https://github.com/Dslate88/mlops-aws-demo/tree/main/infra) folder defines everything this needs to run and be accessible by anyone. 
